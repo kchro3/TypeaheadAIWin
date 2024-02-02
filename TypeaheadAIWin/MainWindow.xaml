@@ -1,0 +1,24 @@
+﻿<Window x:Class="TypeaheadAIWin.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TypeaheadAIWin"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" x:Name="ScrollViewer">
+            <TextBlock x:Name="ChatHistory" TextWrapping="Wrap" Padding="10"/>
+        </ScrollViewer>
+
+        <DockPanel Grid.Row="1" LastChildFill="True">
+            <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" Click="SendButton_Click"/>
+<TextBox x:Name="MessageInput" Margin="5" AcceptsReturn="True" PreviewKeyDown="MessageInput_PreviewKeyDown"/>
+        </DockPanel>
+    </Grid>
+</Window>
