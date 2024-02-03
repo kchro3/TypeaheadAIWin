@@ -6,19 +6,44 @@
         xmlns:local="clr-namespace:TypeaheadAIWin"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
+
+    <Window.Resources>
+        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+    </Window.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" x:Name="ScrollViewer">
-            <TextBlock x:Name="ChatHistory" TextWrapping="Wrap" Padding="10"/>
-        </ScrollViewer>
+        <!-- ListView for Chat Messages -->
+        <ListView x:Name="ChatHistoryListView" Grid.Row="0" VirtualizingPanel.ScrollUnit="Pixel"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <Image Source="{Binding Image}" Visibility="{Binding Image, Converter={StaticResource NullToVisibilityConverter}}"/>
+                        <TextBox Text="{Binding Text}" TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="True"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
 
+        <!-- Input Area -->
         <DockPanel Grid.Row="1" LastChildFill="True">
             <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" Click="SendButton_Click"/>
-<TextBox x:Name="MessageInput" Margin="5" AcceptsReturn="True" PreviewKeyDown="MessageInput_PreviewKeyDown"/>
+            <RichTextBox x:Name="MessageInput"
+                MaxHeight="200"
+                Margin="5"
+                AcceptsReturn="True"
+                PreviewKeyDown="MessageInput_PreviewKeyDown">
+                <RichTextBox.Resources>
+                    <Style TargetType="ScrollViewer">
+                        <Setter Property="CanContentScroll" Value="True"/>
+                    </Style>
+                </RichTextBox.Resources>
+            </RichTextBox>
         </DockPanel>
     </Grid>
 </Window>
