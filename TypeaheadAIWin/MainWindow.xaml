@@ -9,6 +9,7 @@
 
     <Window.Resources>
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <local:ChatMessageRoleToNameConverter x:Key="ChatMessageRoleToNameConverter"/>
     </Window.Resources>
     
     <Grid>
@@ -19,10 +20,11 @@
 
         <!-- ListView for Chat Messages -->
         <ListView x:Name="ChatHistoryListView" Grid.Row="0" VirtualizingPanel.ScrollUnit="Pixel"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  AutomationProperties.LiveSetting="Polite">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel>
+                    <StackPanel AutomationProperties.Name="{Binding Role, Converter={StaticResource ChatMessageRoleToNameConverter}}">
                         <Image Source="{Binding Image}" Visibility="{Binding Image, Converter={StaticResource NullToVisibilityConverter}}"/>
                         <TextBox Text="{Binding Text}" TextWrapping="Wrap" AcceptsReturn="True" IsReadOnly="True"/>
                     </StackPanel>

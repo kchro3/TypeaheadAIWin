@@ -7,15 +7,26 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
-
+	
   <ItemGroup>
-    <Reference Include="System.Speech">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Speech.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Drawing.Common" Version="8.0.1" />
+    <PackageReference Include="System.Speech" Version="8.0.0" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+	
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

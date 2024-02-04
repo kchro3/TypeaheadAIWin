@@ -3,19 +3,22 @@ using System.Text;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Collections.ObjectModel;
+using System.Speech.Synthesis;
+using System.Media;
+using System.Net.Http;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 
 namespace TypeaheadAIWin
@@ -48,33 +51,50 @@ namespace TypeaheadAIWin
             public int Y;
         }
 
-        private DispatcherTimer replyTimer;
+        private readonly HttpClient client;
 
-        ObservableCollection<ChatMessage> chatMessages = new ObservableCollection<ChatMessage>();
+        ObservableCollection<ChatMessage> chatMessages = [];
+        private CancellationTokenSource streamCancellationTokenSource;
+
         AutomationElement? currentElement = null;  // Current state of the message input
+        private SpeechSynthesizer synthesizer;
+        private SoundPlayer audio;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            client = new HttpClient();
+
             ChatHistoryListView.ItemsSource = chatMessages;
             chatMessages.CollectionChanged += ChatMessages_CollectionChanged;
 
-            // Initialize the timer
-            replyTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(3)
-            };
-            replyTimer.Tick += ReplyTimer_Tick;
+            synthesizer = new SpeechSynthesizer();
+            audio = new SoundPlayer(Properties.Resources.snap);
+            audio.Load();
         }
 
-        private void AddMessage(string text, ImageSource image = null)
+        private void AddMessage(ChatMessageRole role, string text, ImageSource image = null)
         {
-            chatMessages.Add(new ChatMessage { Text = text, Image = image });
+            var newMessage = new ChatMessage { Text = text, Image = image, Role = role };
+
+            chatMessages.Add(newMessage);
+
+            // After adding the message, narrate the message
+            if (role == ChatMessageRole.Assistant)
+            {
+                //synthesizer.SpeakAsync(text);
+            }
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            var chatMessage = new ChatMessage();
+            streamCancellationTokenSource?.Cancel();
+
+            var chatMessage = new ChatMessage
+            {
+                Role = ChatMessageRole.User
+            };
 
             // Iterate through the blocks in the RichTextBox
             foreach (Block block in MessageInput.Document.Blocks)
@@ -113,9 +133,14 @@ namespace TypeaheadAIWin
                 MessageInput.Document.Blocks.Clear();
                 MessageInput.Document.Blocks.Add(new Paragraph());
 
-                // Reset and start the timer for the fake reply
-                replyTimer.Stop();
-                replyTimer.Start();
+                // Play the snap sound on a loop
+                audio.PlayLooping();
+
+                // Send chat history as an RPC
+                Task.Run(async () =>
+                {
+                    await SendChatHistoryAsync();
+                });
             }
         }
 
@@ -126,16 +151,6 @@ namespace TypeaheadAIWin
                 SendButton_Click(sender, new RoutedEventArgs());
                 e.Handled = true; // Prevent the enter key from being further processed
             }
-        }
-
-        private void ReplyTimer_Tick(object sender, EventArgs e)
-        {
-            // Stop the timer to prevent it from repeating
-            replyTimer.Stop();
-
-            // Reverse the last message sent
-            // Append the fake reply to the chat history
-            AddMessage("Assistant: ack");
         }
 
         protected override void OnSourceInitialized(EventArgs e)
@@ -155,6 +170,8 @@ namespace TypeaheadAIWin
                 {
                     // Close the window if it's already open
                     this.Hide();
+                    chatMessages.Clear();
+                    audio.Stop();
                 }
                 else
                 {
@@ -279,7 +296,7 @@ namespace TypeaheadAIWin
             catch (Exception ex)
             {
                 // Handle the exception (e.g., log the details)
-                Console.WriteLine("Error capturing screen area: " + ex.Message);
+                Trace.WriteLine("Error capturing screen area: " + ex.Message);
                 return null;
             }
         }
@@ -310,7 +327,7 @@ namespace TypeaheadAIWin
             catch (Exception ex)
             {
                 // Handle the exception (e.g., log the details)
-                Console.WriteLine("Error converting bitmap to ImageSource: " + ex.Message);
+                Trace.WriteLine("Error converting bitmap to ImageSource: " + ex.Message);
                 return null;
             }
         }
@@ -347,6 +364,78 @@ namespace TypeaheadAIWin
 
             richTextBox.CaretPosition = richTextBox.Document.ContentEnd;
             richTextBox.ScrollToEnd();
+        }
+
+        private async Task SendChatHistoryAsync()
+        {
+            // Cancel the previous stream if it exists
+            streamCancellationTokenSource?.Cancel();
+            streamCancellationTokenSource = new CancellationTokenSource();
+
+            var completionResult = CreateCompletionAsStream(streamCancellationTokenSource.Token);
+            audio.Stop();
+            await foreach (var completion in completionResult)
+            {
+                Trace.WriteLine(completion);
+                Dispatcher.Invoke(() =>
+                {
+                    AppendToLastAssistantMessage(completion);
+                });
+            }
+        }
+
+        private void AppendToLastAssistantMessage(ChatResponse response)
+        {
+            Trace.WriteLine(response.Text);
+            // Check if the last message in the collection is an assistant message
+            if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
+            {
+                // Append the text to the last assistant message
+                chatMessages.Last().Text += response.Text;
+            }
+            else
+            {
+                // If the last message is not an assistant message, create a new one
+                AddMessage(ChatMessageRole.Assistant, response.Text);
+            }
+        }
+
+        public async IAsyncEnumerable<ChatResponse> CreateCompletionAsStream(
+            [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            var requestData = new
+            {
+                Messages = chatMessages.ToList(),
+            };
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            };
+
+            using var response = client.PostAsStreamAsync("http://127.0.0.1:8787/v5/wstream", requestData, cancellationToken);
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var reader = new StreamReader(stream);
+            // Continuously read the stream until the end of it
+            while (!reader.EndOfStream)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var line = await reader.ReadLineAsync(cancellationToken);
+
+                // Skip empty lines
+                if (string.IsNullOrEmpty(line))
+                {
+                    continue;
+                }
+
+                var responseObj = JsonSerializer.Deserialize<ChatResponse>(line, options: options);
+                if (responseObj != null)
+                {
+                    yield return responseObj;
+                }
+            }
         }
     }
 }
