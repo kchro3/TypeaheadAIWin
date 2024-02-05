@@ -12,14 +12,22 @@ namespace TypeaheadAIWin
 {
     internal static class HttpClientExtensions
     {
-        public static HttpResponseMessage PostAsStreamAsync(this HttpClient client, string uri, object requestModel, CancellationToken cancellationToken = default)
+        public static HttpResponseMessage PostAsStreamAsync(
+            this HttpClient client, 
+            string uri, 
+            object requestModel, 
+            JsonSerializerOptions? options = null,
+            CancellationToken cancellationToken = default)
         {
-            var settings = new JsonSerializerOptions
+            if (options == null)
             {
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
-            };
+                options = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
+                };
+            }
 
-            var content = JsonContent.Create(requestModel, null, settings);
+            var content = JsonContent.Create(requestModel, null, options);
 
             using var request = CreatePostEventStreamRequest(uri, content);
 

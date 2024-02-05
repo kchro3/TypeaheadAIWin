@@ -19,7 +19,7 @@ using System.Net.Http;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-
+using System.Text.Json.Serialization;
 
 namespace TypeaheadAIWin
 {
@@ -93,7 +93,7 @@ namespace TypeaheadAIWin
 
             var chatMessage = new ChatMessage
             {
-                Role = ChatMessageRole.User
+                Role = ChatMessageRole.User,
             };
 
             // Iterate through the blocks in the RichTextBox
@@ -179,8 +179,8 @@ namespace TypeaheadAIWin
                     currentElement = GetElementUnderCursor();
 
                     var bounds = currentElement.Current.BoundingRectangle;
-                    var screenshot = CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
-                    var imageSource = ConvertBitmapToImageSource(screenshot);
+                    var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
+                    var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
 
                     // Set the captured information to the text field
                     Dispatcher.Invoke(() => {
@@ -203,7 +203,7 @@ namespace TypeaheadAIWin
             }
         }
 
-        private string SerializeElementProperties(AutomationElement element)
+        private static string SerializeElementProperties(AutomationElement element)
         {
             if (element == null)
             {
@@ -264,7 +264,7 @@ namespace TypeaheadAIWin
             base.OnClosed(e);
         }
 
-        private AutomationElement GetElementUnderCursor()
+        private static AutomationElement GetElementUnderCursor()
         {
             GetCursorPos(out POINT cursorPos);
 
@@ -277,63 +277,10 @@ namespace TypeaheadAIWin
             return elementAtCursor;
         }
 
-        public Bitmap CaptureArea(int x, int y, int width, int height)
+        private void InsertImageToRichTextBox(ImageSource? image)
         {
-            if (width <= 0 || height <= 0)
-            {
-                throw new ArgumentException("Capture area dimensions must be greater than zero.");
-            }
+            if (image == null) return;
 
-            try
-            {
-                Bitmap bmp = new Bitmap(width, height);
-                using (Graphics g = Graphics.FromImage(bmp))
-                {
-                    g.CopyFromScreen(x, y, 0, 0, new System.Drawing.Size(width, height), CopyPixelOperation.SourceCopy);
-                }
-                return bmp;
-            }
-            catch (Exception ex)
-            {
-                // Handle the exception (e.g., log the details)
-                Trace.WriteLine("Error capturing screen area: " + ex.Message);
-                return null;
-            }
-        }
-
-        private ImageSource ConvertBitmapToImageSource(Bitmap bitmap)
-        {
-            if (bitmap == null)
-            {
-                throw new ArgumentNullException(nameof(bitmap), "Bitmap cannot be null.");
-            }
-
-            try
-            {
-                using (var memory = new MemoryStream())
-                {
-                    bitmap.Save(memory, ImageFormat.Png);
-                    memory.Position = 0;
-
-                    var bitmapImage = new BitmapImage();
-                    bitmapImage.BeginInit();
-                    bitmapImage.StreamSource = memory;
-                    bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmapImage.EndInit();
-
-                    return bitmapImage;
-                }
-            }
-            catch (Exception ex)
-            {
-                // Handle the exception (e.g., log the details)
-                Trace.WriteLine("Error converting bitmap to ImageSource: " + ex.Message);
-                return null;
-            }
-        }
-
-        private void InsertImageToRichTextBox(ImageSource image)
-        {
             var newImage = new System.Windows.Controls.Image();
             newImage.Source = image;
 
@@ -414,7 +361,19 @@ namespace TypeaheadAIWin
                 PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
             };
 
-            using var response = client.PostAsStreamAsync("http://127.0.0.1:8787/v5/wstream", requestData, cancellationToken);
+            using var response = client.PostAsStreamAsync(
+                "http://127.0.0.1:8787/v5/wstream", 
+                requestData, 
+                new JsonSerializerOptions
+                {
+                    Converters = { new ChatMessageJsonConverter() },
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                },
+                cancellationToken
+            );
+
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var reader = new StreamReader(stream);
             // Continuously read the stream until the end of it

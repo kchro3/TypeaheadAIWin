@@ -1,4 +1,9 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Windows.Media;
 
@@ -27,6 +32,7 @@ namespace TypeaheadAIWin
                 OnPropertyChanged(nameof(Text));
             }
         }
+
         public ImageSource Image
         {
             get => _image;
@@ -36,6 +42,7 @@ namespace TypeaheadAIWin
                 OnPropertyChanged(nameof(Image));
             }
         }
+
         public AutomationElement FocusedElement
         {
             get => _focusedElement;
@@ -45,6 +52,7 @@ namespace TypeaheadAIWin
                 OnPropertyChanged(nameof(FocusedElement));
             }
         }
+
         public ChatMessageRole Role
         {
             get => _role;
