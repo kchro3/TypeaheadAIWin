@@ -8,14 +8,14 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace TypeaheadAIWin
+namespace TypeaheadAIWin.Source
 {
     internal static class HttpClientExtensions
     {
         public static HttpResponseMessage PostAsStreamAsync(
-            this HttpClient client, 
-            string uri, 
-            object requestModel, 
+            this HttpClient client,
+            string uri,
+            object requestModel,
             JsonSerializerOptions? options = null,
             CancellationToken cancellationToken = default)
         {

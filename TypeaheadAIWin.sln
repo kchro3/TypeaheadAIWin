@@ -5,6 +5,8 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TypeaheadAIWin", "TypeaheadAIWin\TypeaheadAIWin.csproj", "{600CF919-32F2-4880-903A-3A003D337D4E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeaheadAIWinTests", "TypeaheadAIWinTests\TypeaheadAIWinTests.csproj", "{D512450D-66DC-4C0C-8B1A-6CD6A739F141}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{600CF919-32F2-4880-903A-3A003D337D4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{600CF919-32F2-4880-903A-3A003D337D4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{600CF919-32F2-4880-903A-3A003D337D4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D512450D-66DC-4C0C-8B1A-6CD6A739F141}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D512450D-66DC-4C0C-8B1A-6CD6A739F141}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D512450D-66DC-4C0C-8B1A-6CD6A739F141}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D512450D-66DC-4C0C-8B1A-6CD6A739F141}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

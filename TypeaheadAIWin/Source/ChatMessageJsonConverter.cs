@@ -5,7 +5,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 
 
-namespace TypeaheadAIWin
+namespace TypeaheadAIWin.Source
 {
     /**
      * This class is used to serialize ChatMessage objects to JSON.
@@ -38,6 +38,13 @@ namespace TypeaheadAIWin
 
                 writer.WriteEndObject();
                 writer.WriteEndObject();
+                writer.WriteEndObject();
+                writer.WriteEndObject();
+            }
+            else
+            {
+                writer.WriteStartObject("messageType");
+                writer.WriteStartObject("string");
                 writer.WriteEndObject();
                 writer.WriteEndObject();
             }
