@@ -7,19 +7,17 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Collections.ObjectModel;
-using System.Speech.Synthesis;
 using System.Media;
 using System.Net.Http;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using MdXaml;
+using TypeaheadAIWin.Source;
 
 namespace TypeaheadAIWin
 {
@@ -54,14 +52,17 @@ namespace TypeaheadAIWin
         private readonly HttpClient client;
 
         ObservableCollection<ChatMessage> chatMessages = [];
-        private CancellationTokenSource streamCancellationTokenSource;
+        private CancellationTokenSource? streamCancellationTokenSource;
 
         AutomationElement? currentElement = null;  // Current state of the message input
-        private SpeechSynthesizer synthesizer;
+        
+        private StreamingSpeechProcessor streamingSpeechProcessor;
+
         private SoundPlayer audio;
 
         public MainWindow()
         {
+            Trace.WriteLine("initializing main window");
             InitializeComponent();
 
             client = new HttpClient();
@@ -69,27 +70,18 @@ namespace TypeaheadAIWin
             ChatHistoryListView.ItemsSource = chatMessages;
             chatMessages.CollectionChanged += ChatMessages_CollectionChanged;
 
-            synthesizer = new SpeechSynthesizer();
+            streamingSpeechProcessor = new StreamingSpeechProcessor(new SpeechSynthesizerWrapper());
+
             audio = new SoundPlayer(Properties.Resources.snap);
             audio.Load();
-        }
-
-        private void AddMessage(ChatMessageRole role, string text, ImageSource image = null)
-        {
-            var newMessage = new ChatMessage { Text = text, Image = image, Role = role };
-
-            chatMessages.Add(newMessage);
-
-            // After adding the message, narrate the message
-            if (role == ChatMessageRole.Assistant)
-            {
-                //synthesizer.SpeakAsync(text);
-            }
+            Trace.WriteLine("initialized main window");
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             streamCancellationTokenSource?.Cancel();
+            streamingSpeechProcessor.Cancel();
+            audio.Stop();
 
             var chatMessage = new ChatMessage
             {
@@ -171,6 +163,7 @@ namespace TypeaheadAIWin
                     // Close the window if it's already open
                     this.Hide();
                     chatMessages.Clear();
+                    streamingSpeechProcessor.Cancel();
                     audio.Stop();
                 }
                 else
@@ -313,6 +306,12 @@ namespace TypeaheadAIWin
             richTextBox.ScrollToEnd();
         }
 
+        private FlowDocument ConvertMarkdownToFlowDocument(string markdown)
+        {
+            var md = new Markdown();
+            return md.Transform(markdown);
+        }
+
         private async Task SendChatHistoryAsync()
         {
             // Cancel the previous stream if it exists
@@ -333,17 +332,34 @@ namespace TypeaheadAIWin
 
         private void AppendToLastAssistantMessage(ChatResponse response)
         {
-            Trace.WriteLine(response.Text);
-            // Check if the last message in the collection is an assistant message
-            if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
+            if (response.FinishReason != null)
             {
-                // Append the text to the last assistant message
-                chatMessages.Last().Text += response.Text;
-            }
-            else
+                // Check if the last message in the collection is an assistant message                
+                if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
+                {
+                    streamingSpeechProcessor.FlushBuffer();
+                }
+            } 
+            else if (response.Text != null)
             {
-                // If the last message is not an assistant message, create a new one
-                AddMessage(ChatMessageRole.Assistant, response.Text);
+                streamingSpeechProcessor.ProcessToken(response.Text);
+
+                // Check if the last message in the collection is an assistant message
+                if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
+                {
+                    // Append the text to the last assistant message
+                    chatMessages.Last().Text += response.Text;
+                }
+                else
+                {
+                    // If the last message is not an assistant message, create a new one
+                    var chatMessage = new ChatMessage
+                    {
+                        Role = ChatMessageRole.Assistant,
+                        Text = response.Text,
+                    };
+                    chatMessages.Add(chatMessage);
+                }
             }
         }
 

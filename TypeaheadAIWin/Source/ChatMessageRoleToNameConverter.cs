@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
-namespace TypeaheadAIWin
+namespace TypeaheadAIWin.Source
 {
     public class ChatMessageRoleToNameConverter : IValueConverter
     {

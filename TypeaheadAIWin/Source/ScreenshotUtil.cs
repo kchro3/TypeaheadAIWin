@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 
-namespace TypeaheadAIWin
+namespace TypeaheadAIWin.Source
 {
     internal static class ScreenshotUtil
     {
