@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Windows;
@@ -10,6 +11,21 @@ namespace TypeaheadAIWin
     /// </summary>
     public partial class App : Application
     {
+        private ServiceProvider serviceProvider;
+
+        public App()
+        {
+            ServiceCollection services = new ServiceCollection();
+            ConfigureServices(services);
+            serviceProvider = services.BuildServiceProvider();
+        }
+
+        private void ConfigureServices(ServiceCollection services)
+        {
+            services.AddSingleton<MainWindow>();
+            services.AddSingleton<LoginWindow>();
+        }
+
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
@@ -18,26 +34,26 @@ namespace TypeaheadAIWin
 
             try
             {
-                var mainWindow = new MainWindow();
-                var loginWindow = new LoginWindow();
+                var mainWindow = serviceProvider.GetService<MainWindow>()!;
+                var loginWindow = serviceProvider.GetService<LoginWindow>()!;
                 var result = loginWindow.ShowDialog();
 
                 if (result.HasValue && result.Value)
                 {
-                    mainWindow.Show();
+                    loginWindow.Close();
                 }
                 else
                 {
                     // Optionally, provide feedback before shutting down
                     MessageBox.Show("Login failed or was cancelled. The application will now close.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Information);
-                    //this.Shutdown();
+                    this.Shutdown();
                 }
             }
             catch (Exception ex)
             {
                 // Log the exception or show an error message
                 MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                //this.Shutdown();
+                this.Shutdown();
             }
         }
     }
