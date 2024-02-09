@@ -68,5 +68,15 @@ namespace TypeaheadAIWin.Properties {
                 return ResourceManager.GetStream("snap", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap typeahead_white {
+            get {
+                object obj = ResourceManager.GetObject("typeahead_white", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

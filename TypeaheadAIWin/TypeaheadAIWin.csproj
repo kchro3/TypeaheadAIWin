@@ -7,12 +7,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\typeahead_white.png" />
+    <None Remove="typeahead_white.png" />
+  </ItemGroup>
 	
   <ItemGroup>
+    <PackageReference Include="MahApps.Metro" Version="2.4.10" />
     <PackageReference Include="MdXaml" Version="1.27.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="supabase-csharp" Version="0.15.0" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <Resource Include="Resources\typeahead_white.png" />
   </ItemGroup>
 	
   <ItemGroup>

@@ -18,13 +18,14 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MdXaml;
 using TypeaheadAIWin.Source;
+using MahApps.Metro.Controls;
 
 namespace TypeaheadAIWin
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
         private const int WM_HOTKEY = 0x0312;
         private const int HOTKEY_ID = 9000;
@@ -50,6 +51,7 @@ namespace TypeaheadAIWin
         }
 
         private readonly HttpClient client;
+        private readonly Supabase.Client _supabaseClient;
 
         ObservableCollection<ChatMessage> chatMessages = [];
         private CancellationTokenSource? streamCancellationTokenSource;
@@ -60,9 +62,10 @@ namespace TypeaheadAIWin
 
         private SoundPlayer audio;
 
-        public MainWindow()
+        public MainWindow(Supabase.Client supabaseClient)
         {
             InitializeComponent();
+            _supabaseClient = supabaseClient;
 
             client = new HttpClient();
 
