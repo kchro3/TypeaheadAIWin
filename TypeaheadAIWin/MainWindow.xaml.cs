@@ -62,7 +62,6 @@ namespace TypeaheadAIWin
 
         public MainWindow()
         {
-            Trace.WriteLine("initializing main window");
             InitializeComponent();
 
             client = new HttpClient();
@@ -74,7 +73,6 @@ namespace TypeaheadAIWin
 
             audio = new SoundPlayer(Properties.Resources.snap);
             audio.Load();
-            Trace.WriteLine("initialized main window");
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)

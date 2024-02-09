@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Diagnostics;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace TypeaheadAIWin
@@ -8,9 +9,14 @@ namespace TypeaheadAIWin
     /// </summary>
     public partial class LoginWindow : Window
     {
-        public LoginWindow()
+        private readonly Supabase.Client _supabaseClient;
+
+        public LoginWindow(Supabase.Client supabaseClient)
         {
+            Trace.WriteLine("Login initializing.");
             InitializeComponent();
+            _supabaseClient = supabaseClient;
+            Trace.WriteLine("Login initialized.");
         }
 
         private async void SignInButton_Click(object sender, RoutedEventArgs e)
@@ -26,21 +32,15 @@ namespace TypeaheadAIWin
 
             try
             {
-                bool isAuthenticated = true;
-                //bool isAuthenticated = await AuthenticateUser(email, password);
-                if (isAuthenticated)
-                {
-                    this.DialogResult = true;
-                    this.Close();
-                }
-                else
-                {
-                    MessageBox.Show("Invalid email or password.", "Authentication Failed", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                // Use Supabase to sign in with email and password
+                var response = await _supabaseClient.Auth.SignIn(email, password);
+                MessageBox.Show("Login Successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                this.DialogResult = true; // Close the login dialog
+                this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"An error occurred: {ex.Message}", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -51,11 +51,28 @@ namespace TypeaheadAIWin
             this.DialogResult = true;
         }
 
-        private void RegisterButton_Click(object sender, RoutedEventArgs e)
+        private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Navigate to Registration Screen or Logic
-            // For now, showing a simple message
-            StatusTextBlock.Text = "Registration functionality not implemented yet.";
+            string email = EmailTextBox.Text; // Assuming you have a TextBox for email input
+            string password = PasswordBox.Password; // Assuming you have a PasswordBox for password input
+
+            // Basic validation
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            {
+                MessageBox.Show("Email and password are required.", "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // Use Supabase to register a new user
+                var response = await _supabaseClient.Auth.SignUp(email, password);
+                MessageBox.Show("Registration Successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Registration Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
