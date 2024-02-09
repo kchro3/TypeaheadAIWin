@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using MahApps.Metro.Controls;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,16 +8,14 @@ namespace TypeaheadAIWin
     /// <summary>
     /// Interaction logic for LoginWindow.xaml
     /// </summary>
-    public partial class LoginWindow : Window
+    public partial class LoginWindow : MetroWindow
     {
         private readonly Supabase.Client _supabaseClient;
 
         public LoginWindow(Supabase.Client supabaseClient)
         {
-            Trace.WriteLine("Login initializing.");
             InitializeComponent();
             _supabaseClient = supabaseClient;
-            Trace.WriteLine("Login initialized.");
         }
 
         private async void SignInButton_Click(object sender, RoutedEventArgs e)
@@ -44,13 +43,6 @@ namespace TypeaheadAIWin
             }
         }
 
-        private void SignInWithGoogleButton_Click(object sender, RoutedEventArgs e)
-        {
-            // TODO: Implement Google Sign-In Logic
-            // For now, just closing the login window
-            this.DialogResult = true;
-        }
-
         private async void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
             string email = EmailTextBox.Text; // Assuming you have a TextBox for email input
@@ -68,6 +60,8 @@ namespace TypeaheadAIWin
                 // Use Supabase to register a new user
                 var response = await _supabaseClient.Auth.SignUp(email, password);
                 MessageBox.Show("Registration Successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                this.DialogResult = true; // Close the login dialog
+                this.Close();
             }
             catch (Exception ex)
             {
