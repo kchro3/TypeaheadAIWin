@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Windows;
+using TypeaheadAIWin.Source;
 
 namespace TypeaheadAIWin
 {
@@ -40,12 +41,15 @@ namespace TypeaheadAIWin
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            Trace.WriteLine("Starting up.");
+            Trace.WriteLine(TypeaheadAIWin.Properties.Settings.Default.Session);
 
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
             try
             {
+                var supabaseClient = serviceProvider.GetService<Supabase.Client>()!;
+
+                Trace.WriteLine(supabaseClient.Auth.CurrentUser);
                 var mainWindow = serviceProvider.GetService<MainWindow>()!;
                 var loginWindow = serviceProvider.GetService<LoginWindow>()!;
                 var result = loginWindow.ShowDialog();
@@ -53,6 +57,7 @@ namespace TypeaheadAIWin
                 if (result.HasValue && result.Value)
                 {
                     loginWindow.Close();
+                    mainWindow.Show();
                 }
                 else
                 {
@@ -76,7 +81,8 @@ namespace TypeaheadAIWin
 
             var options = new Supabase.SupabaseOptions
             {
-                AutoConnectRealtime = false  // NOTE: It hangs when true, not sure why...
+                AutoConnectRealtime = false,  // NOTE: It hangs when true, not sure why...
+                SessionHandler = new SupabaseSessionHandler()
             };
 
             var supabase = new Supabase.Client(url, key, options);

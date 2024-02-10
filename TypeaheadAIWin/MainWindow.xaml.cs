@@ -367,8 +367,11 @@ namespace TypeaheadAIWin
         public async IAsyncEnumerable<ChatResponse> CreateCompletionAsStream(
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var requestData = new
+
+            var uuid = _supabaseClient.Auth.CurrentUser?.Id ?? throw new InvalidOperationException("User is not authenticated");
+            var requestData = new ChatRequest
             {
+                Uuid = uuid,
                 Messages = chatMessages.ToList(),
             };
 
@@ -379,7 +382,7 @@ namespace TypeaheadAIWin
             };
 
             using var response = client.PostAsStreamAsync(
-                "http://127.0.0.1:8787/v5/wstream", 
+                AppConfig.GetApiBaseUrl() + "/v5/wstream",
                 requestData, 
                 new JsonSerializerOptions
                 {

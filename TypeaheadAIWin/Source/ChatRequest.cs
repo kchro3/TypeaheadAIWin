@@ -2,6 +2,8 @@
 {
     public class ChatRequest
     {
-        public List<ChatMessage> ChatHistory { get; set; }
+        public string Uuid { get; set; }
+
+        public List<ChatMessage> Messages { get; set; }
     }
 }
