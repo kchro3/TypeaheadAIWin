@@ -26,51 +26,54 @@ namespace TypeaheadAIWin
             services.AddSingleton<MainWindow>();
             services.AddSingleton<LoginWindow>();
 
-            // Register Supabase client as a singleton
-            services.AddSingleton(async serviceProvider =>
-            {
-                return await CreateSupabaseClientAsync();
-            });
-
-            // Since the above registration is async, it registers a Task<Supabase.Client>.
-            // We register Supabase.Client to resolve it from the Task.
-            services.AddSingleton<Supabase.Client>(serviceProvider =>
-                serviceProvider.GetRequiredService<Task<Supabase.Client>>().Result);
+            // Synchronously initialize Supabase client
+            var supabaseClient = CreateSupabaseClientAsync().GetAwaiter().GetResult(); // This is a blocking call
+            services.AddSingleton(supabaseClient);
         }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            Trace.WriteLine(TypeaheadAIWin.Properties.Settings.Default.Session);
-
+            
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-            try
+            var mainWindow = serviceProvider.GetRequiredService<MainWindow>();
+
+            // Check if the user is already signed in.
+            var supabaseClient = serviceProvider.GetRequiredService<Supabase.Client>();
+            var session = await supabaseClient.Auth.RetrieveSessionAsync();
+
+            if (session == null)
             {
-                var supabaseClient = serviceProvider.GetService<Supabase.Client>()!;
-
-                Trace.WriteLine(supabaseClient.Auth.CurrentUser);
-                var mainWindow = serviceProvider.GetService<MainWindow>()!;
-                var loginWindow = serviceProvider.GetService<LoginWindow>()!;
-                var result = loginWindow.ShowDialog();
-
-                if (result.HasValue && result.Value)
+                Trace.WriteLine("User is not signed in");
+                try
                 {
-                    loginWindow.Close();
-                    mainWindow.Show();
+                    var loginWindow = serviceProvider.GetRequiredService<LoginWindow>();
+                    var result = loginWindow.ShowDialog();
+
+                    if (result.HasValue && result.Value)
+                    {
+                        loginWindow.Close();
+                        mainWindow.Show();
+                    }
+                    else
+                    {
+                        // Optionally, provide feedback before shutting down
+                        MessageBox.Show("Login failed or was cancelled. The application will now close.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Information);
+                        this.Shutdown();
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    // Optionally, provide feedback before shutting down
-                    MessageBox.Show("Login failed or was cancelled. The application will now close.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Log the exception or show an error message
+                    MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     this.Shutdown();
                 }
             }
-            catch (Exception ex)
+            else
             {
-                // Log the exception or show an error message
-                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                this.Shutdown();
+                Trace.WriteLine("User is logged in.");
+                mainWindow.Show();
             }
         }
 
@@ -81,11 +84,12 @@ namespace TypeaheadAIWin
 
             var options = new Supabase.SupabaseOptions
             {
-                AutoConnectRealtime = false,  // NOTE: It hangs when true, not sure why...
+                AutoConnectRealtime = true,
                 SessionHandler = new SupabaseSessionHandler()
             };
 
             var supabase = new Supabase.Client(url, key, options);
+            supabase.Auth.LoadSession();
             await supabase.InitializeAsync();
             return supabase;
         }

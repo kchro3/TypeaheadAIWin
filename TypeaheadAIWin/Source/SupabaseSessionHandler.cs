@@ -16,6 +16,7 @@ namespace TypeaheadAIWin.Source
         {
             Trace.WriteLine("Destroy");
             Properties.Settings.Default.Session = null;
+            Properties.Settings.Default.Save();
         }
 
         Session? IGotrueSessionPersistence<Session>.LoadSession()

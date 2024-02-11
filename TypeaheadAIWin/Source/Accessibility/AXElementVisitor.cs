@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Text.Json;
 
-namespace TypeaheadAIWin.Source
+namespace TypeaheadAIWin.Source.Accessibility
 {
     class AXElementVisitor
     {
