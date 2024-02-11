@@ -4,7 +4,8 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-                 xmlns:local="clr-namespace:TypeaheadAIWin.Source"
+                 xmlns:local="clr-namespace:TypeaheadAIWin.Source" 
+                 xmlns:views="clr-namespace:TypeaheadAIWin.Source.Views"
                  mc:Ignorable="d"
                  Title="Typeahead AI"
                  Height="450" Width="800"
@@ -22,22 +23,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Menu Grid.Row="0" VerticalAlignment="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New" Click="New_Click"/>
-                <MenuItem Header="_Open" Click="Open_Click"/>
-                <MenuItem Header="_Save" Click="Save_Click"/>
-                <Separator/>
-                <MenuItem Header="E_xit" Click="Exit_Click"/>
-            </MenuItem>
-            <MenuItem Header="_Settings">
-                <MenuItem Header="_Speech" Click="Speech_Click"/>
-            </MenuItem>
-            <MenuItem Header="_Help">
-                <MenuItem Header="_About" Click="About_Click"/>
-            </MenuItem>
-        </Menu>
-
+        <views:MenuBar Grid.Row="0" />
+:
         <!-- ListView for Chat Messages -->
         <ListView x:Name="ChatHistoryListView" Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"

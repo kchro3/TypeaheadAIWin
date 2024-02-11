@@ -77,38 +77,6 @@ namespace TypeaheadAIWin
             audio.Load();
         }
 
-        private void New_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Open_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Speech_Click(object sender, RoutedEventArgs e)
-        {
-            var speechSettingsWindow = new SpeechSettingsWindow(this, _speechSettingsViewModel);
-            var dialogResult = speechSettingsWindow.ShowDialog();
-            if (dialogResult.HasValue && dialogResult.Value)
-            {
-                // Update the PromptRate in your SpeechSynthesizerWrapper
-                _speechSynthesizerWrapper.PromptRate = _speechSettingsViewModel.SelectedPromptRate;
-            }
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
-
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             streamCancellationTokenSource?.Cancel();
