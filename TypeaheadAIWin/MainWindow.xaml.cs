@@ -46,7 +46,6 @@ namespace TypeaheadAIWin
         private readonly Supabase.Client _supabaseClient;
         private readonly AXInspector _axInspector;
         private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
-        private readonly SpeechSettingsViewModel _speechSettingsViewModel;
         private readonly StreamingSpeechProcessor _speechProcessor;
 
         ObservableCollection<ChatMessage> chatMessages = [];
@@ -58,14 +57,12 @@ namespace TypeaheadAIWin
             Supabase.Client supabaseClient,
             AXInspector axInspector,
             ISpeechSynthesizerWrapper speechSynthesizerWrapper,
-            SpeechSettingsViewModel speechSettingsViewModel,
             StreamingSpeechProcessor speechProcessor
         ) {
             InitializeComponent();
             _supabaseClient = supabaseClient;
             _axInspector = axInspector;
             _speechSynthesizerWrapper = speechSynthesizerWrapper;
-            _speechSettingsViewModel = speechSettingsViewModel;
             _speechProcessor = speechProcessor;
 
             client = new HttpClient();
@@ -75,38 +72,6 @@ namespace TypeaheadAIWin
 
             audio = new SoundPlayer(Properties.Resources.snap);
             audio.Load();
-        }
-
-        private void New_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Open_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Speech_Click(object sender, RoutedEventArgs e)
-        {
-            var speechSettingsWindow = new SpeechSettingsWindow(this, _speechSettingsViewModel);
-            var dialogResult = speechSettingsWindow.ShowDialog();
-            if (dialogResult.HasValue && dialogResult.Value)
-            {
-                // Update the PromptRate in your SpeechSynthesizerWrapper
-                _speechSynthesizerWrapper.PromptRate = _speechSettingsViewModel.SelectedPromptRate;
-            }
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
