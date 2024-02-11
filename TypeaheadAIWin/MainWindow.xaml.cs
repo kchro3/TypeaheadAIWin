@@ -19,6 +19,7 @@ using System.Text.Json.Serialization;
 using MdXaml;
 using TypeaheadAIWin.Source;
 using MahApps.Metro.Controls;
+using TypeaheadAIWin.Source.Accessibility;
 
 namespace TypeaheadAIWin
 {
@@ -39,19 +40,9 @@ namespace TypeaheadAIWin
         [DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool GetCursorPos(out POINT lpPoint);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
-            public int X;
-            public int Y;
-        }
-
         private readonly HttpClient client;
         private readonly Supabase.Client _supabaseClient;
+        private readonly AXInspector _axInspector;
 
         ObservableCollection<ChatMessage> chatMessages = [];
         private CancellationTokenSource? streamCancellationTokenSource;
@@ -62,10 +53,13 @@ namespace TypeaheadAIWin
 
         private SoundPlayer audio;
 
-        public MainWindow(Supabase.Client supabaseClient)
-        {
+        public MainWindow(
+            Supabase.Client supabaseClient,
+            AXInspector axInspector
+        ) {
             InitializeComponent();
             _supabaseClient = supabaseClient;
+            _axInspector = axInspector;
 
             client = new HttpClient();
 
@@ -170,7 +164,7 @@ namespace TypeaheadAIWin
                 else
                 {
                     // Window is not visible, take a screenshot and open the window
-                    currentElement = GetElementUnderCursor();
+                    currentElement = _axInspector.GetElementUnderCursor();
 
                     var bounds = currentElement.Current.BoundingRectangle;
                     var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
@@ -191,9 +185,9 @@ namespace TypeaheadAIWin
                     // Now open the window
                     this.Show();
                     this.Activate(); // Brings window to front and gives it focus
-                }
 
-                handled = true;
+                    handled = true;
+                }
             }
         }
 
@@ -258,34 +252,19 @@ namespace TypeaheadAIWin
             base.OnClosed(e);
         }
 
-        private static AutomationElement GetElementUnderCursor()
-        {
-            GetCursorPos(out POINT cursorPos);
-
-            // Convert the point to a System.Windows.Point
-            System.Windows.Point pt = new System.Windows.Point(cursorPos.X, cursorPos.Y);
-
-            // Get the Automation Element at the cursor position
-            AutomationElement elementAtCursor = AutomationElement.FromPoint(pt);
-
-            return elementAtCursor;
-        }
-
         private void InsertImageToRichTextBox(ImageSource? image)
         {
             if (image == null) return;
 
-            var newImage = new System.Windows.Controls.Image();
-            newImage.Source = image;
+            var newImage = new Image()
+            {
+                Source = image,
+                Width = image.Width,
+                Height = image.Height,
+            };
 
             var container = new InlineUIContainer(newImage);
             MessageInput.Document.Blocks.Add(new Paragraph(container));
-        }
-
-        private void AppendTextToRichTextBox(string text)
-        {
-            var paragraph = new Paragraph(new Run(text));
-            MessageInput.Document.Blocks.Add(paragraph);
         }
 
         private void ChatMessages_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -305,12 +284,6 @@ namespace TypeaheadAIWin
 
             richTextBox.CaretPosition = richTextBox.Document.ContentEnd;
             richTextBox.ScrollToEnd();
-        }
-
-        private FlowDocument ConvertMarkdownToFlowDocument(string markdown)
-        {
-            var md = new Markdown();
-            return md.Transform(markdown);
         }
 
         private async Task SendChatHistoryAsync()
