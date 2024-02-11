@@ -16,11 +16,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MdXaml;
 using TypeaheadAIWin.Source;
 using MahApps.Metro.Controls;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Speech;
+using TypeaheadAIWin.Views;
+using TypeaheadAIWin.Source.ViewModel;
 
 namespace TypeaheadAIWin
 {
@@ -44,6 +45,8 @@ namespace TypeaheadAIWin
         private readonly HttpClient client;
         private readonly Supabase.Client _supabaseClient;
         private readonly AXInspector _axInspector;
+        private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
+        private readonly SpeechSettingsViewModel _speechSettingsViewModel;
         private readonly StreamingSpeechProcessor _speechProcessor;
 
         ObservableCollection<ChatMessage> chatMessages = [];
@@ -54,11 +57,15 @@ namespace TypeaheadAIWin
         public MainWindow(
             Supabase.Client supabaseClient,
             AXInspector axInspector,
+            ISpeechSynthesizerWrapper speechSynthesizerWrapper,
+            SpeechSettingsViewModel speechSettingsViewModel,
             StreamingSpeechProcessor speechProcessor
         ) {
             InitializeComponent();
             _supabaseClient = supabaseClient;
             _axInspector = axInspector;
+            _speechSynthesizerWrapper = speechSynthesizerWrapper;
+            _speechSettingsViewModel = speechSettingsViewModel;
             _speechProcessor = speechProcessor;
 
             client = new HttpClient();
@@ -84,6 +91,13 @@ namespace TypeaheadAIWin
 
         private void Speech_Click(object sender, RoutedEventArgs e)
         {
+            var speechSettingsWindow = new SpeechSettingsWindow(this, _speechSettingsViewModel);
+            var dialogResult = speechSettingsWindow.ShowDialog();
+            if (dialogResult.HasValue && dialogResult.Value)
+            {
+                // Update the PromptRate in your SpeechSynthesizerWrapper
+                _speechSynthesizerWrapper.PromptRate = _speechSettingsViewModel.SelectedPromptRate;
+            }
         }
 
         private void About_Click(object sender, RoutedEventArgs e)

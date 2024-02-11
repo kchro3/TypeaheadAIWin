@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Speech.Synthesis;
+﻿using System.Speech.Synthesis;
 
 namespace TypeaheadAIWin.Source.Speech
 {
@@ -9,13 +8,35 @@ namespace TypeaheadAIWin.Source.Speech
 
         void SpeakAsyncCancelAll();
 
-        void SetPromptRate(PromptRate rate);
+        // Property for PromptRate with getter and setter
+        PromptRate PromptRate { get; set; }
     }
 
     // Wrapper for SpeechSynthesizer to allow for easier testing
     public class SpeechSynthesizerWrapper : ISpeechSynthesizerWrapper
     {
         private readonly SpeechSynthesizer synthesizer;
+        
+        public PromptRate PromptRate
+        {
+            get
+            {
+                var rate = Properties.Settings.Default.PromptRate;
+                if (Enum.IsDefined(typeof(PromptRate), rate))
+                {
+                    return (PromptRate)rate;
+                }
+                else
+                {
+                    return PromptRate.NotSet;
+                }
+            }
+            set
+            {
+                Properties.Settings.Default.PromptRate = (int)value;
+                Properties.Settings.Default.Save();
+            }
+        }
 
         public SpeechSynthesizerWrapper()
         {
@@ -28,11 +49,10 @@ namespace TypeaheadAIWin.Source.Speech
          */
         public void SpeakAsync(string text)
         {
-            Trace.WriteLine(text);
             PromptBuilder builder = new PromptBuilder();
             builder.StartStyle(new PromptStyle()
             {
-                Rate = GetPromptRate()
+                Rate = PromptRate
             });
             builder.AppendText(text);
             builder.EndStyle();
@@ -43,25 +63,6 @@ namespace TypeaheadAIWin.Source.Speech
         public void SpeakAsyncCancelAll()
         {
             synthesizer.SpeakAsyncCancelAll();
-        }
-
-        private PromptRate GetPromptRate()
-        {
-            var rate = Properties.Settings.Default.PromptRate;
-            if (Enum.IsDefined(typeof(PromptRate), rate))
-            {
-                return (PromptRate)rate;
-            }
-            else
-            {
-                return PromptRate.NotSet;
-            }
-        }
-
-        public void SetPromptRate(PromptRate rate)
-        {
-            Properties.Settings.Default.PromptRate = (int) rate;
-            Properties.Settings.Default.Save();
         }
     }
 }
