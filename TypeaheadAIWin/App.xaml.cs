@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Windows;
 using TypeaheadAIWin.Source;
+using TypeaheadAIWin.Source.Accessibility;
 
 namespace TypeaheadAIWin
 {
@@ -29,6 +30,8 @@ namespace TypeaheadAIWin
             // Synchronously initialize Supabase client
             var supabaseClient = CreateSupabaseClientAsync().GetAwaiter().GetResult(); // This is a blocking call
             services.AddSingleton(supabaseClient);
+
+            services.AddSingleton<AXInspector>();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
