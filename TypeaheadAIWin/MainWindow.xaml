@@ -23,7 +23,8 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <views:MenuBar Grid.Row="0" />
+        <!--<views:MenuBar Grid.Row="0" />-->
+        <TextBlock></TextBlock>
 :
         <!-- ListView for Chat Messages -->
         <ListView x:Name="ChatHistoryListView" Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"

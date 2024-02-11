@@ -7,6 +7,7 @@ using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.ViewModel;
+using TypeaheadAIWin.Source.Views;
 
 namespace TypeaheadAIWin
 {
@@ -28,6 +29,7 @@ namespace TypeaheadAIWin
         {
             // Bind views
             services.AddSingleton<MainWindow>();
+            services.AddSingleton<MenuBar>();
             services.AddSingleton<LoginWindow>();
 
             // Synchronously initialize Supabase client
@@ -35,6 +37,7 @@ namespace TypeaheadAIWin
 
             // Bind singletons
             services.AddSingleton<AXInspector>();
+            services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);

@@ -1,4 +1,5 @@
 ﻿using System.Windows.Controls;
+using TypeaheadAIWin.Source.ViewModel;
 
 namespace TypeaheadAIWin.Source.Views
 {
@@ -10,6 +11,7 @@ namespace TypeaheadAIWin.Source.Views
         public MenuBar()
         {
             InitializeComponent();
+            this.DataContext = new MenuBarViewModel();
         }
     }
 }

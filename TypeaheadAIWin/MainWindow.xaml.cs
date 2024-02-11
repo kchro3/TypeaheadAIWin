@@ -46,7 +46,6 @@ namespace TypeaheadAIWin
         private readonly Supabase.Client _supabaseClient;
         private readonly AXInspector _axInspector;
         private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
-        private readonly SpeechSettingsViewModel _speechSettingsViewModel;
         private readonly StreamingSpeechProcessor _speechProcessor;
 
         ObservableCollection<ChatMessage> chatMessages = [];
@@ -58,14 +57,12 @@ namespace TypeaheadAIWin
             Supabase.Client supabaseClient,
             AXInspector axInspector,
             ISpeechSynthesizerWrapper speechSynthesizerWrapper,
-            SpeechSettingsViewModel speechSettingsViewModel,
             StreamingSpeechProcessor speechProcessor
         ) {
             InitializeComponent();
             _supabaseClient = supabaseClient;
             _axInspector = axInspector;
             _speechSynthesizerWrapper = speechSynthesizerWrapper;
-            _speechSettingsViewModel = speechSettingsViewModel;
             _speechProcessor = speechProcessor;
 
             client = new HttpClient();

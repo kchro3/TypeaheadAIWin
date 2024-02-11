@@ -4,23 +4,22 @@
              xmlns:d="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800"
              xmlns:local="clr-namespace:TypeaheadAIWin.Source.Views">
     <Grid>
-        <Menu>
+        <!--<Menu>
             <MenuItem Header="_File">
-                <MenuItem Header="_New" Command="{Binding NewCommand}"/>
+                --><!--<MenuItem Header="_New" Command="{Binding NewCommand}"/>
                 <MenuItem Header="_Open" Command="{Binding OpenCommand}"/>
                 <MenuItem Header="_Save" Command="{Binding SaveCommand}"/>
                 <Separator/>
-                <MenuItem Header="E_xit" Command="{Binding ExitCommand}"/>
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}"/>--><!--
             </MenuItem>
             <MenuItem Header="_Settings">
-                <MenuItem Header="_Speech" Command="{Binding SpeechCommand}"/>
+                --><!--<MenuItem Header="_Speech" Command="{Binding SpeechCommand}"/>--><!--
             </MenuItem>
             <MenuItem Header="_Help">
-                <MenuItem Header="_About" Command="{Binding AboutCommand}"/>
+                --><!--<MenuItem Header="_About" Command="{Binding AboutCommand}"/>--><!--
             </MenuItem>
-        </Menu>
+        </Menu>-->
     </Grid>
 </UserControl>
