@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TypeaheadAIWin.Source;
+using TypeaheadAIWin.Source.Speech;
 
 namespace TypeaheadAIWinTests.Test
 {

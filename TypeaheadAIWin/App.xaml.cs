@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Windows;
 using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Speech;
 
 namespace TypeaheadAIWin
 {
@@ -24,14 +25,20 @@ namespace TypeaheadAIWin
 
         private void ConfigureServices(ServiceCollection services)
         {
+            // Bind views
             services.AddSingleton<MainWindow>();
             services.AddSingleton<LoginWindow>();
 
             // Synchronously initialize Supabase client
             var supabaseClient = CreateSupabaseClientAsync().GetAwaiter().GetResult(); // This is a blocking call
+
+            // Bind singletons
+            services.AddSingleton<AXInspector>();
+            services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);
 
-            services.AddSingleton<AXInspector>();
+            // Bind scoped
+            services.AddScoped<ISpeechSynthesizerWrapper, SpeechSynthesizerWrapper>();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -45,6 +52,9 @@ namespace TypeaheadAIWin
             // Check if the user is already signed in.
             var supabaseClient = serviceProvider.GetRequiredService<Supabase.Client>();
             var session = await supabaseClient.Auth.RetrieveSessionAsync();
+
+            var speechSynthesizer = serviceProvider.GetRequiredService<ISpeechSynthesizerWrapper>();
+            speechSynthesizer.SetPromptRate(System.Speech.Synthesis.PromptRate.ExtraFast);
 
             if (session == null)
             {

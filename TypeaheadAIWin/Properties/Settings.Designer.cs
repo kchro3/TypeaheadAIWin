@@ -34,5 +34,17 @@ namespace TypeaheadAIWin.Properties {
                 this["Session"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int PromptRate {
+            get {
+                return ((int)(this["PromptRate"]));
+            }
+            set {
+                this["PromptRate"] = value;
+            }
+        }
     }
 }

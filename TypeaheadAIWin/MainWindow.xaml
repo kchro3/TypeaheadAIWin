@@ -7,7 +7,9 @@
                  xmlns:local="clr-namespace:TypeaheadAIWin.Source"
                  mc:Ignorable="d"
                  Title="Typeahead AI"
-                 Height="450" Width="800">
+                 Height="450" Width="800"
+                 ShowTitleBar="False" ShowSystemMenuOnRightClick="False">
+    
     <Window.Resources>
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         <local:ChatMessageRoleToNameConverter x:Key="ChatMessageRoleToNameConverter"/>
@@ -15,12 +17,29 @@
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <Menu Grid.Row="0" VerticalAlignment="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Click="New_Click"/>
+                <MenuItem Header="_Open" Click="Open_Click"/>
+                <MenuItem Header="_Save" Click="Save_Click"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Settings">
+                <MenuItem Header="_Speech" Click="Speech_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About" Click="About_Click"/>
+            </MenuItem>
+        </Menu>
+
         <!-- ListView for Chat Messages -->
-        <ListView x:Name="ChatHistoryListView" Grid.Row="0" VirtualizingPanel.ScrollUnit="Pixel"
+        <ListView x:Name="ChatHistoryListView" Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   AutomationProperties.LiveSetting="Polite">
             <ListView.ItemTemplate>
@@ -34,7 +53,7 @@
         </ListView>
 
         <!-- Input Area -->
-        <DockPanel Grid.Row="1" LastChildFill="True">
+        <DockPanel Grid.Row="2" LastChildFill="True">
             <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" Click="SendButton_Click"/>
             <RichTextBox x:Name="MessageInput"
                 MaxHeight="200"
