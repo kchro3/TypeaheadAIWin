@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Windows;
 using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Speech;
+using TypeaheadAIWin.Source.ViewModel;
 
 namespace TypeaheadAIWin
 {
@@ -24,14 +26,21 @@ namespace TypeaheadAIWin
 
         private void ConfigureServices(ServiceCollection services)
         {
+            // Bind views
             services.AddSingleton<MainWindow>();
             services.AddSingleton<LoginWindow>();
 
             // Synchronously initialize Supabase client
             var supabaseClient = CreateSupabaseClientAsync().GetAwaiter().GetResult(); // This is a blocking call
+
+            // Bind singletons
+            services.AddSingleton<AXInspector>();
+            services.AddSingleton<SpeechSettingsViewModel>();
+            services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);
 
-            services.AddSingleton<AXInspector>();
+            // Bind scoped
+            services.AddScoped<ISpeechSynthesizerWrapper, SpeechSynthesizerWrapper>();
         }
 
         protected override async void OnStartup(StartupEventArgs e)

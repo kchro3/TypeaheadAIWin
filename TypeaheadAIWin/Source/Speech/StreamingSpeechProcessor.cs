@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace TypeaheadAIWin.Source
+namespace TypeaheadAIWin.Source.Speech
 {
     public class StreamingSpeechProcessor
     {

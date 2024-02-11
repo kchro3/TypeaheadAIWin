@@ -16,10 +16,12 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MdXaml;
 using TypeaheadAIWin.Source;
 using MahApps.Metro.Controls;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Speech;
+using TypeaheadAIWin.Views;
+using TypeaheadAIWin.Source.ViewModel;
 
 namespace TypeaheadAIWin
 {
@@ -43,39 +45,74 @@ namespace TypeaheadAIWin
         private readonly HttpClient client;
         private readonly Supabase.Client _supabaseClient;
         private readonly AXInspector _axInspector;
+        private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
+        private readonly SpeechSettingsViewModel _speechSettingsViewModel;
+        private readonly StreamingSpeechProcessor _speechProcessor;
 
         ObservableCollection<ChatMessage> chatMessages = [];
         private CancellationTokenSource? streamCancellationTokenSource;
-
-        AutomationElement? currentElement = null;  // Current state of the message input
         
-        private StreamingSpeechProcessor streamingSpeechProcessor;
-
         private SoundPlayer audio;
 
         public MainWindow(
             Supabase.Client supabaseClient,
-            AXInspector axInspector
+            AXInspector axInspector,
+            ISpeechSynthesizerWrapper speechSynthesizerWrapper,
+            SpeechSettingsViewModel speechSettingsViewModel,
+            StreamingSpeechProcessor speechProcessor
         ) {
             InitializeComponent();
             _supabaseClient = supabaseClient;
             _axInspector = axInspector;
+            _speechSynthesizerWrapper = speechSynthesizerWrapper;
+            _speechSettingsViewModel = speechSettingsViewModel;
+            _speechProcessor = speechProcessor;
 
             client = new HttpClient();
 
             ChatHistoryListView.ItemsSource = chatMessages;
             chatMessages.CollectionChanged += ChatMessages_CollectionChanged;
 
-            streamingSpeechProcessor = new StreamingSpeechProcessor(new SpeechSynthesizerWrapper());
-
             audio = new SoundPlayer(Properties.Resources.snap);
             audio.Load();
+        }
+
+        private void New_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void Open_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void Save_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void Speech_Click(object sender, RoutedEventArgs e)
+        {
+            var speechSettingsWindow = new SpeechSettingsWindow(this, _speechSettingsViewModel);
+            var dialogResult = speechSettingsWindow.ShowDialog();
+            if (dialogResult.HasValue && dialogResult.Value)
+            {
+                // Update the PromptRate in your SpeechSynthesizerWrapper
+                _speechSynthesizerWrapper.PromptRate = _speechSettingsViewModel.SelectedPromptRate;
+            }
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             streamCancellationTokenSource?.Cancel();
-            streamingSpeechProcessor.Cancel();
+            _speechProcessor.Cancel();
             audio.Stop();
 
             var chatMessage = new ChatMessage
@@ -158,14 +195,13 @@ namespace TypeaheadAIWin
                     // Close the window if it's already open
                     this.Hide();
                     chatMessages.Clear();
-                    streamingSpeechProcessor.Cancel();
+                    _speechProcessor.Cancel();
                     audio.Stop();
                 }
                 else
                 {
                     // Window is not visible, take a screenshot and open the window
-                    currentElement = _axInspector.GetElementUnderCursor();
-
+                    var currentElement = _axInspector.GetElementUnderCursor();
                     var bounds = currentElement.Current.BoundingRectangle;
                     var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
                     var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
@@ -292,15 +328,22 @@ namespace TypeaheadAIWin
             streamCancellationTokenSource?.Cancel();
             streamCancellationTokenSource = new CancellationTokenSource();
 
-            var completionResult = CreateCompletionAsStream(streamCancellationTokenSource.Token);
-            audio.Stop();
-            await foreach (var completion in completionResult)
+            try
             {
-                Trace.WriteLine(completion);
-                Dispatcher.Invoke(() =>
+                var completionResult = CreateCompletionAsStream(streamCancellationTokenSource.Token);
+                audio.Stop();
+                await foreach (var completion in completionResult)
                 {
-                    AppendToLastAssistantMessage(completion);
-                });
+                    Trace.WriteLine(completion);
+                    Dispatcher.Invoke(() =>
+                    {
+                        AppendToLastAssistantMessage(completion);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex);
             }
         }
 
@@ -311,12 +354,12 @@ namespace TypeaheadAIWin
                 // Check if the last message in the collection is an assistant message                
                 if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
                 {
-                    streamingSpeechProcessor.FlushBuffer();
+                    _speechProcessor.FlushBuffer();
                 }
             } 
             else if (response.Text != null)
             {
-                streamingSpeechProcessor.ProcessToken(response.Text);
+                _speechProcessor.ProcessToken(response.Text);
 
                 // Check if the last message in the collection is an assistant message
                 if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
@@ -340,7 +383,6 @@ namespace TypeaheadAIWin
         public async IAsyncEnumerable<ChatResponse> CreateCompletionAsStream(
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-
             var uuid = _supabaseClient.Auth.CurrentUser?.Id ?? throw new InvalidOperationException("User is not authenticated");
             var requestData = new ChatRequest
             {
