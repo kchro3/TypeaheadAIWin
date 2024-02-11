@@ -22,14 +22,19 @@ namespace TypeaheadAIWin.Source
         Session? IGotrueSessionPersistence<Session>.LoadSession()
         {
             Trace.WriteLine("Load");
-            if (Properties.Settings.Default.Session != null)
+            try
             {
-                return JsonSerializer.Deserialize<Session>(Properties.Settings.Default.Session);
-            } 
-            else
-            {
-                return null;
+                if (Properties.Settings.Default.Session != null)
+                {
+                    return JsonSerializer.Deserialize<Session>(Properties.Settings.Default.Session);
+                }
             }
+            catch (Exception ex)
+            {
+                Trace.WriteLine("Failed to load session\n" + ex);
+            }
+
+            return null;
         }
 
         void IGotrueSessionPersistence<Session>.SaveSession(Session session)

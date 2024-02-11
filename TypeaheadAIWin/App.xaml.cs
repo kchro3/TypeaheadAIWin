@@ -7,6 +7,7 @@ using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.ViewModel;
+using TypeaheadAIWin.Source.Views;
 
 namespace TypeaheadAIWin
 {
@@ -15,13 +16,25 @@ namespace TypeaheadAIWin
     /// </summary>
     public partial class App : Application
     {
-        private ServiceProvider serviceProvider;
+        private ServiceProvider _serviceProvider;
+        public static ServiceProvider ServiceProvider
+        {
+            get
+            {
+                if (Current is App app)
+                {
+                    return app._serviceProvider;
+                }
+
+                return null;
+            }
+        }
 
         public App()
         {
             ServiceCollection services = new ServiceCollection();
             ConfigureServices(services);
-            serviceProvider = services.BuildServiceProvider();
+            _serviceProvider = services.BuildServiceProvider();
         }
 
         private void ConfigureServices(ServiceCollection services)
@@ -29,12 +42,14 @@ namespace TypeaheadAIWin
             // Bind views
             services.AddSingleton<MainWindow>();
             services.AddSingleton<LoginWindow>();
+            services.AddSingleton<MenuBar>();
 
             // Synchronously initialize Supabase client
             var supabaseClient = CreateSupabaseClientAsync().GetAwaiter().GetResult(); // This is a blocking call
 
             // Bind singletons
-            services.AddSingleton<AXInspector>();
+            services.AddSingleton<AXInspector>(); 
+            services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);
@@ -49,10 +64,10 @@ namespace TypeaheadAIWin
             
             this.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-            var mainWindow = serviceProvider.GetRequiredService<MainWindow>();
+            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
 
             // Check if the user is already signed in.
-            var supabaseClient = serviceProvider.GetRequiredService<Supabase.Client>();
+            var supabaseClient = _serviceProvider.GetRequiredService<Supabase.Client>();
             var session = await supabaseClient.Auth.RetrieveSessionAsync();
 
             if (session == null)
@@ -60,7 +75,7 @@ namespace TypeaheadAIWin
                 Trace.WriteLine("User is not signed in");
                 try
                 {
-                    var loginWindow = serviceProvider.GetRequiredService<LoginWindow>();
+                    var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
                     var result = loginWindow.ShowDialog();
 
                     if (result.HasValue && result.Value)

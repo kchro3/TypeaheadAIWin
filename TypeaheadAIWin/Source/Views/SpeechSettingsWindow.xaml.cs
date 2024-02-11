@@ -1,18 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Speech.Synthesis;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.ViewModel;
 
 namespace TypeaheadAIWin.Views
@@ -22,11 +9,11 @@ namespace TypeaheadAIWin.Views
     /// </summary>
     public partial class SpeechSettingsWindow : Window
     {
-        public SpeechSettingsWindow(Window parent, SpeechSettingsViewModel viewModel)
+        public SpeechSettingsWindow()
         {
-            Owner = parent;
+            Owner = Application.Current.MainWindow;
             InitializeComponent();
-            this.DataContext = viewModel;
+            DataContext = App.ServiceProvider.GetRequiredService<SpeechSettingsViewModel>();
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)

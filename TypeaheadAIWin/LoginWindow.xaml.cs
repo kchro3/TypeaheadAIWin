@@ -33,7 +33,6 @@ namespace TypeaheadAIWin
             {
                 // Use Supabase to sign in with email and password
                 var response = await _supabaseClient.Auth.SignIn(email, password);
-                MessageBox.Show("Login Successful!", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 this.DialogResult = true; // Close the login dialog
                 this.Close();
             }
