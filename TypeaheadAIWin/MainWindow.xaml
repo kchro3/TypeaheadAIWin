@@ -4,7 +4,8 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-                 xmlns:local="clr-namespace:TypeaheadAIWin.Source" xmlns:views="clr-namespace:TypeaheadAIWin.Source.Views"
+                 xmlns:local="clr-namespace:TypeaheadAIWin.Source" 
+                 xmlns:views="clr-namespace:TypeaheadAIWin.Source.Views"
                  mc:Ignorable="d"
                  Title="Typeahead AI"
                  Height="450" Width="800"
@@ -25,7 +26,9 @@
         <views:MenuBar />
 
         <!-- ListView for Chat Messages -->
-        <ListView x:Name="ChatHistoryListView" Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
+        <ListView x:Name="ChatHistoryListView" 
+                  ItemsSource="{Binding ChatMessages}"
+                  Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   AutomationProperties.LiveSetting="Polite">
             <ListView.ItemTemplate>
@@ -40,12 +43,13 @@
 
         <!-- Input Area -->
         <DockPanel Grid.Row="2" LastChildFill="True">
-            <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" Click="SendButton_Click"/>
+            <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" 
+                    Command="{Binding SendCommand}" />
             <RichTextBox x:Name="MessageInput"
-                MaxHeight="200"
-                Margin="5"
-                AcceptsReturn="True"
-                PreviewKeyDown="MessageInput_PreviewKeyDown">
+                         MaxHeight="200"
+                         Margin="5"
+                         AcceptsReturn="True"
+                         PreviewKeyDown="MessageInput_PreviewKeyDown">
                 <RichTextBox.Resources>
                     <Style TargetType="ScrollViewer">
                         <Setter Property="CanContentScroll" Value="True"/>

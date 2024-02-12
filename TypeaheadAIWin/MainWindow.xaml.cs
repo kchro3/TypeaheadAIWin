@@ -45,24 +45,34 @@ namespace TypeaheadAIWin
         private readonly HttpClient client;
         private readonly Supabase.Client _supabaseClient;
         private readonly AXInspector _axInspector;
-        private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
         private readonly StreamingSpeechProcessor _speechProcessor;
+        private ChatMessagesViewModel _viewModel;
 
         ObservableCollection<ChatMessage> chatMessages = [];
         private CancellationTokenSource? streamCancellationTokenSource;
-        
+
         private SoundPlayer audio;
 
         public MainWindow(
             Supabase.Client supabaseClient,
             AXInspector axInspector,
-            ISpeechSynthesizerWrapper speechSynthesizerWrapper,
+            ChatMessagesViewModel chatMessagesViewModel,
             StreamingSpeechProcessor speechProcessor
         ) {
+
             InitializeComponent();
+            _viewModel = chatMessagesViewModel;
+            this.DataContext = _viewModel;
+            // Event to update ViewModel when the RichTextBox content changes
+            MessageInput.TextChanged += (s, e) =>
+            {
+                Trace.WriteLine("on text changed");
+                var document = MessageInput.Document;
+                _viewModel.ChatDraftRichTextXaml = ChatMessagesViewModel.FlowDocumentToXaml(document);
+            };
+
             _supabaseClient = supabaseClient;
             _axInspector = axInspector;
-            _speechSynthesizerWrapper = speechSynthesizerWrapper;
             _speechProcessor = speechProcessor;
 
             client = new HttpClient();
@@ -74,144 +84,159 @@ namespace TypeaheadAIWin
             audio.Load();
         }
 
-        private void New_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        //private void SendButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    streamCancellationTokenSource?.Cancel();
+        //    _speechProcessor.Cancel();
+        //    audio.Stop();
 
-        private void Open_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        //    var chatMessage = new ChatMessage
+        //    {
+        //        Role = ChatMessageRole.User,
+        //    };
 
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        //    // Iterate through the blocks in the RichTextBox
+        //    foreach (Block block in MessageInput.Document.Blocks)
+        //    {
+        //        if (block is Paragraph paragraph)
+        //        {
+        //            foreach (Inline inline in paragraph.Inlines)
+        //            {
+        //                if (inline is Run run)
+        //                {
+        //                    // Append text to the ChatMessage's Text property
+        //                    if (chatMessage.Text != null)
+        //                    {
+        //                        chatMessage.Text += "\r\n" + run.Text;
+        //                    }
+        //                    else
+        //                    {
+        //                        chatMessage.Text = run.Text;
+        //                    }
+        //                }
+        //                else if (inline is InlineUIContainer uiContainer && uiContainer.Child is System.Windows.Controls.Image image)
+        //                {
+        //                    // Extract the ImageSource from the Image and set it in the ChatMessage
+        //                    chatMessage.Image = image.Source;
+        //                }
+        //            }
+        //        }
+        //    }
 
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-        }
+        //    // Check if there's content to send
+        //    if (!string.IsNullOrEmpty(chatMessage.Text) || chatMessage.Image != null)
+        //    {
+        //        chatMessages.Add(chatMessage); // Add the message to the ObservableCollection
 
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        //        // Clear the MessageInput RichTextBox
+        //        MessageInput.Document.Blocks.Clear();
+        //        MessageInput.Document.Blocks.Add(new Paragraph());
 
-        private void SendButton_Click(object sender, RoutedEventArgs e)
-        {
-            streamCancellationTokenSource?.Cancel();
-            _speechProcessor.Cancel();
-            audio.Stop();
+        //        // Play the snap sound on a loop
+        //        audio.PlayLooping();
 
-            var chatMessage = new ChatMessage
-            {
-                Role = ChatMessageRole.User,
-            };
-
-            // Iterate through the blocks in the RichTextBox
-            foreach (Block block in MessageInput.Document.Blocks)
-            {
-                if (block is Paragraph paragraph)
-                {
-                    foreach (Inline inline in paragraph.Inlines)
-                    {
-                        if (inline is Run run)
-                        {
-                            // Append text to the ChatMessage's Text property
-                            if (chatMessage.Text != null)
-                            {
-                                chatMessage.Text += "\r\n" + run.Text;
-                            }
-                            else
-                            {
-                                chatMessage.Text = run.Text;
-                            }
-                        }
-                        else if (inline is InlineUIContainer uiContainer && uiContainer.Child is System.Windows.Controls.Image image)
-                        {
-                            // Extract the ImageSource from the Image and set it in the ChatMessage
-                            chatMessage.Image = image.Source;
-                        }
-                    }
-                }
-            }
-
-            // Check if there's content to send
-            if (!string.IsNullOrEmpty(chatMessage.Text) || chatMessage.Image != null)
-            {
-                chatMessages.Add(chatMessage); // Add the message to the ObservableCollection
-
-                // Clear the MessageInput RichTextBox
-                MessageInput.Document.Blocks.Clear();
-                MessageInput.Document.Blocks.Add(new Paragraph());
-
-                // Play the snap sound on a loop
-                audio.PlayLooping();
-
-                // Send chat history as an RPC
-                Task.Run(async () =>
-                {
-                    await SendChatHistoryAsync();
-                });
-            }
-        }
+        //        // Send chat history as an RPC
+        //        Task.Run(async () =>
+        //        {
+        //            await SendChatHistoryAsync();
+        //        });
+        //    }
+        //}
 
         private void MessageInput_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && Keyboard.Modifiers != ModifierKeys.Shift)
             {
-                SendButton_Click(sender, new RoutedEventArgs());
+                var chatMessage = new ChatMessage
+                {
+                    Role = ChatMessageRole.User,
+                };
+
+                // Iterate through the blocks in the RichTextBox
+                foreach (Block block in MessageInput.Document.Blocks)
+                {
+                    if (block is Paragraph paragraph)
+                    {
+                        foreach (Inline inline in paragraph.Inlines)
+                        {
+                            if (inline is Run run)
+                            {
+                                // Append text to the ChatMessage's Text property
+                                if (chatMessage.Text != null)
+                                {
+                                    chatMessage.Text += "\r\n" + run.Text;
+                                }
+                                else
+                                {
+                                    chatMessage.Text = run.Text;
+                                }
+                            }
+                            else if (inline is InlineUIContainer uiContainer && uiContainer.Child is System.Windows.Controls.Image image)
+                            {
+                                // Extract the ImageSource from the Image and set it in the ChatMessage
+                                chatMessage.Image = image.Source;
+                            }
+                        }
+                    }
+                }
+
+                // Send chat history as an RPC
+                Trace.WriteLine("placeholder sending");
+
+                //SendButton_Click(sender, new RoutedEventArgs());
                 e.Handled = true; // Prevent the enter key from being further processed
             }
         }
 
-        protected override void OnSourceInitialized(EventArgs e)
-        {
-            base.OnSourceInitialized(e);
-            var helper = new WindowInteropHelper(this);
-            RegisterHotKey(helper.Handle, HOTKEY_ID, MOD_CTRL | MOD_ALT, VK_T);
+        //protected override void OnSourceInitialized(EventArgs e)
+        //{
+        //    base.OnSourceInitialized(e);
+        //    var helper = new WindowInteropHelper(this);
+        //    RegisterHotKey(helper.Handle, HOTKEY_ID, MOD_CTRL | MOD_ALT, VK_T);
 
-            ComponentDispatcher.ThreadFilterMessage += new ThreadMessageEventHandler(ComponentDispatcher_ThreadFilterMessage);
-        }
+        //    ComponentDispatcher.ThreadFilterMessage += new ThreadMessageEventHandler(ComponentDispatcher_ThreadFilterMessage);
+        //}
 
-        private void ComponentDispatcher_ThreadFilterMessage(ref MSG msg, ref bool handled)
-        {
-            if (msg.message == WM_HOTKEY && (int)msg.wParam == HOTKEY_ID)
-            {
-                if (this.Visibility == Visibility.Visible)
-                {
-                    // Close the window if it's already open
-                    this.Hide();
-                    chatMessages.Clear();
-                    _speechProcessor.Cancel();
-                    audio.Stop();
-                }
-                else
-                {
-                    // Window is not visible, take a screenshot and open the window
-                    var currentElement = _axInspector.GetElementUnderCursor();
-                    var bounds = currentElement.Current.BoundingRectangle;
-                    var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
-                    var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
+        //private void ComponentDispatcher_ThreadFilterMessage(ref MSG msg, ref bool handled)
+        //{
+        //    if (msg.message == WM_HOTKEY && (int)msg.wParam == HOTKEY_ID)
+        //    {
+        //        if (this.Visibility == Visibility.Visible)
+        //        {
+        //            // Close the window if it's already open
+        //            this.Hide();
+        //            chatMessages.Clear();
+        //            _speechProcessor.Cancel();
+        //            audio.Stop();
+        //        }
+        //        else
+        //        {
+        //            // Window is not visible, take a screenshot and open the window
+        //            var currentElement = _axInspector.GetElementUnderCursor();
+        //            var bounds = currentElement.Current.BoundingRectangle;
+        //            var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
+        //            var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
 
-                    // Set the captured information to the text field
-                    Dispatcher.Invoke(() => {
-                        // Clear the MessageInput RichTextBox
-                        MessageInput.Document.Blocks.Clear();
+        //            // Set the captured information to the text field
+        //            Dispatcher.Invoke(() => {
+        //                // Clear the MessageInput RichTextBox
+        //                MessageInput.Document.Blocks.Clear();
 
-                        InsertImageToRichTextBox(imageSource); // Insert the image
-                        MessageInput.Document.Blocks.Add(new Paragraph());
-                        MoveCursorToEnd(MessageInput);        // Move cursor to the end
+        //                InsertImageToRichTextBox(imageSource); // Insert the image
+        //                MessageInput.Document.Blocks.Add(new Paragraph());
+        //                MoveCursorToEnd(MessageInput);        // Move cursor to the end
 
-                        MessageInput.Focus(); // Set focus to the RichTextBox
-                    });
+        //                MessageInput.Focus(); // Set focus to the RichTextBox
+        //            });
 
-                    // Now open the window
-                    this.Show();
-                    this.Activate(); // Brings window to front and gives it focus
+        //            // Now open the window
+        //            this.Show();
+        //            this.Activate(); // Brings window to front and gives it focus
 
-                    handled = true;
-                }
-            }
-        }
+        //            handled = true;
+        //        }
+        //    }
+        //}
 
         private static string SerializeElementProperties(AutomationElement element)
         {
@@ -274,20 +299,20 @@ namespace TypeaheadAIWin
             base.OnClosed(e);
         }
 
-        private void InsertImageToRichTextBox(ImageSource? image)
-        {
-            if (image == null) return;
+        //private void InsertImageToRichTextBox(ImageSource? image)
+        //{
+        //    if (image == null) return;
 
-            var newImage = new Image()
-            {
-                Source = image,
-                Width = image.Width,
-                Height = image.Height,
-            };
+        //    var newImage = new Image()
+        //    {
+        //        Source = image,
+        //        Width = image.Width,
+        //        Height = image.Height,
+        //    };
 
-            var container = new InlineUIContainer(newImage);
-            MessageInput.Document.Blocks.Add(new Paragraph(container));
-        }
+        //    var container = new InlineUIContainer(newImage);
+        //    MessageInput.Document.Blocks.Add(new Paragraph(container));
+        //}
 
         private void ChatMessages_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -415,6 +440,22 @@ namespace TypeaheadAIWin
                 {
                     yield return responseObj;
                 }
+            }
+        }
+
+        // Method to load content into RichTextBox when ViewModel property changes
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            if (e.Property.Name == nameof(ChatMessagesViewModel.ChatDraftRichTextXaml))
+            {
+                Trace.WriteLine("on property changed");
+                var document = ChatMessagesViewModel.XamlToFlowDocument(_viewModel.ChatDraftRichTextXaml);
+                MessageInput.Document = document;
+            } 
+            else
+            {
+                Trace.WriteLine("nothing changed");
             }
         }
     }
