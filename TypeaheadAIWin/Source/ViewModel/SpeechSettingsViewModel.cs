@@ -6,7 +6,7 @@ namespace TypeaheadAIWin.Source.ViewModel
 {
     public partial class SpeechSettingsViewModel: ObservableObject
     {
-        public UserDefaults UserDefaults;
+        public UserDefaults UserDefaults { get; }
 
         [ObservableProperty]
         private Array _promptRates;
