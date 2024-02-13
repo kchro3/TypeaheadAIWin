@@ -1,7 +1,5 @@
 ﻿using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -214,8 +212,7 @@ namespace TypeaheadAIWin
             var newImage = new Image()
             {
                 Source = image,
-                Width = image.Width,
-                Height = image.Height,
+                Stretch = Stretch.None
             };
 
             var container = new InlineUIContainer(newImage);
