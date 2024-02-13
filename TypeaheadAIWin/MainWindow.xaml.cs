@@ -20,8 +20,8 @@ using TypeaheadAIWin.Source;
 using MahApps.Metro.Controls;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Speech;
-using TypeaheadAIWin.Views;
-using TypeaheadAIWin.Source.ViewModel;
+using TypeaheadAIWin.Source.Model;
+using CursorType = TypeaheadAIWin.Source.Model.CursorType;
 
 namespace TypeaheadAIWin
 {
@@ -47,6 +47,7 @@ namespace TypeaheadAIWin
         private readonly AXInspector _axInspector;
         private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
         private readonly StreamingSpeechProcessor _speechProcessor;
+        private readonly UserDefaults _userDefaults;
 
         ObservableCollection<ChatMessage> chatMessages = [];
         private CancellationTokenSource? streamCancellationTokenSource;
@@ -57,13 +58,15 @@ namespace TypeaheadAIWin
             Supabase.Client supabaseClient,
             AXInspector axInspector,
             ISpeechSynthesizerWrapper speechSynthesizerWrapper,
-            StreamingSpeechProcessor speechProcessor
+            StreamingSpeechProcessor speechProcessor,
+            UserDefaults userDefaults
         ) {
             InitializeComponent();
             _supabaseClient = supabaseClient;
             _axInspector = axInspector;
             _speechSynthesizerWrapper = speechSynthesizerWrapper;
             _speechProcessor = speechProcessor;
+            _userDefaults = userDefaults;
 
             client = new HttpClient();
 
@@ -72,27 +75,6 @@ namespace TypeaheadAIWin
 
             audio = new SoundPlayer(Properties.Resources.snap);
             audio.Load();
-        }
-
-        private void New_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Open_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -187,7 +169,12 @@ namespace TypeaheadAIWin
                 else
                 {
                     // Window is not visible, take a screenshot and open the window
-                    var currentElement = _axInspector.GetElementUnderCursor();
+                    var currentElement = _userDefaults.CursorType switch
+                    {
+                        CursorType.ScreenReader => _axInspector.GetFocusedElement(),
+                        _ => _axInspector.GetElementUnderCursor()
+                    };
+
                     var bounds = currentElement.Current.BoundingRectangle;
                     var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
                     var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
@@ -211,60 +198,6 @@ namespace TypeaheadAIWin
                     handled = true;
                 }
             }
-        }
-
-        private static string SerializeElementProperties(AutomationElement element)
-        {
-            if (element == null)
-            {
-                return "No element in focus";
-            }
-
-            var sb = new StringBuilder();
-
-            // Basic Properties
-            sb.AppendLine($"Name: {element.Current.Name}");
-            sb.AppendLine($"Control Type: {element.Current.ControlType.ProgrammaticName}");
-            sb.AppendLine($"Bounding Rectangle: {element.Current.BoundingRectangle}");
-
-            // Additional Properties
-            try
-            {
-                // FrameworkId - Type of framework (WPF, WinForms, etc.)
-                sb.AppendLine($"Framework ID: {element.Current.FrameworkId}");
-
-                // AutomationId - Unique within the same application
-                sb.AppendLine($"Automation ID: {element.Current.AutomationId}");
-
-                // ClassName - Underlying UI class name
-                sb.AppendLine($"Class Name: {element.Current.ClassName}");
-
-                // IsControlElement - Whether it's a control element
-                sb.AppendLine($"Is Control Element: {element.Current.IsControlElement}");
-
-                // IsContentElement - Whether it's a content element
-                sb.AppendLine($"Is Content Element: {element.Current.IsContentElement}");
-
-                // IsEnabled - Whether the control is enabled
-                sb.AppendLine($"Is Enabled: {element.Current.IsEnabled}");
-
-                // IsOffscreen - Whether the control is off-screen
-                sb.AppendLine($"Is Offscreen: {element.Current.IsOffscreen}");
-
-                // IsKeyboardFocusable - Whether the element can accept keyboard focus
-                sb.AppendLine($"Is Keyboard Focusable: {element.Current.IsKeyboardFocusable}");
-
-                // ProcessId - Associated process ID
-                sb.AppendLine($"Process ID: {element.Current.ProcessId}");
-
-                // Additional properties can be added as needed
-            }
-            catch (ElementNotAvailableException)
-            {
-                sb.AppendLine("Error: Element properties not available.");
-            }
-
-            return sb.ToString();
         }
 
         protected override void OnClosed(EventArgs e)

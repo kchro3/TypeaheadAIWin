@@ -50,6 +50,7 @@ namespace TypeaheadAIWin
 
             // Bind singletons
             services.AddSingleton<AXInspector>();
+            services.AddSingleton<CursorSettingsViewModel>();
             services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();

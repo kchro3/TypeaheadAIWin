@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
-using TypeaheadAIWin.Views;
+using TypeaheadAIWin.Source.Views;
 
 namespace TypeaheadAIWin.Source.ViewModel
 {
@@ -35,6 +35,13 @@ namespace TypeaheadAIWin.Source.ViewModel
         {
             // Implement the action for the Exit command
             Application.Current.Shutdown();
+        }
+
+        [RelayCommand]
+        private void Cursor()
+        {
+            var cursorSettingsWindow = new CursorSettingsWindow();
+            cursorSettingsWindow.ShowDialog();
         }
 
         [RelayCommand]
