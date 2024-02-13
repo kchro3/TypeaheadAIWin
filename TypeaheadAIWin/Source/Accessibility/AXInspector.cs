@@ -22,7 +22,12 @@ namespace TypeaheadAIWin.Source.Accessibility
             public int Y;
         }
 
-        public AXInspector() { }
+        private AutomationElement focusedElement;
+
+        public AXInspector() {
+            focusedElement = AutomationElement.FocusedElement;
+            Subscribe();
+        }
 
         public AutomationElement GetElementUnderCursor()
         {
@@ -47,6 +52,30 @@ namespace TypeaheadAIWin.Source.Accessibility
             else
             {
                 throw new InvalidOperationException("Failed to get cursor position.");
+            }
+        }
+
+        public AutomationElement GetFocusedElement()
+        {
+            return focusedElement;
+        }
+
+        private void Subscribe()
+        {
+            Automation.AddAutomationFocusChangedEventHandler(OnFocusChanged);
+        }
+
+        public void Unsubscribe()
+        {
+            Automation.RemoveAutomationFocusChangedEventHandler(OnFocusChanged);
+        }
+
+        private void OnFocusChanged(object sender, AutomationFocusChangedEventArgs e)
+        {
+            var element = sender as AutomationElement;
+            if (element != null)
+            {
+                focusedElement = element;
             }
         }
     }

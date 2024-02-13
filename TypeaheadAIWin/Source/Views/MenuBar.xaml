@@ -22,6 +22,7 @@
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}"/>
             </MenuItem>
             <MenuItem Header="_Settings">
+                <MenuItem Header="_Cursor" Command="{Binding CursorCommand}"/>
                 <MenuItem Header="_Speech" Command="{Binding SpeechCommand}"/>
             </MenuItem>
             <MenuItem Header="_Help">

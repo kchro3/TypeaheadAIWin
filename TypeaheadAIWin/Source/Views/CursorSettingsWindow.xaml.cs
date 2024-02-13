@@ -5,15 +5,15 @@ using TypeaheadAIWin.Source.ViewModel;
 namespace TypeaheadAIWin.Source.Views
 {
     /// <summary>
-    /// Interaction logic for SpeechSettingsWindow.xaml
+    /// Interaction logic for CursorSettingsWindow.xaml
     /// </summary>
-    public partial class SpeechSettingsWindow : Window
+    public partial class CursorSettingsWindow : Window
     {
-        public SpeechSettingsWindow()
+        public CursorSettingsWindow()
         {
             Owner = Application.Current.MainWindow;
             InitializeComponent();
-            DataContext = App.ServiceProvider.GetRequiredService<SpeechSettingsViewModel>();
+            DataContext = App.ServiceProvider.GetRequiredService<CursorSettingsViewModel>();
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
