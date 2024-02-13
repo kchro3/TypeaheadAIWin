@@ -14,6 +14,7 @@
     <Window.Resources>
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
         <local:ChatMessageRoleToNameConverter x:Key="ChatMessageRoleToNameConverter"/>
+        <local:ChatMessageToMarkdownConverter x:Key="ChatMessageToMarkdownConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -28,16 +29,30 @@
         <!-- ListView for Chat Messages -->
         <ListView x:Name="ChatHistoryListView" Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                  AutomationProperties.LiveSetting="Polite">
+                  AutomationProperties.LiveSetting="Polite"
+                  AlternationCount="3" >
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel AutomationProperties.Name="{Binding Role, Converter={StaticResource ChatMessageRoleToNameConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Role, Converter={StaticResource ChatMessageRoleToNameConverter}}" 
+                                   FontWeight="Bold"
+                                   Margin="0,0,0,5"/>
                         <Image Source="{Binding Image}" Visibility="{Binding Image, Converter={StaticResource NullToVisibilityConverter}}"
                                Stretch="None" />
-                        <FlowDocumentScrollViewer Document="{Binding MarkdownContent}" VerticalScrollBarVisibility="Disabled"/>
+                        <FlowDocumentScrollViewer Document="{Binding Text, Converter={StaticResource ChatMessageToMarkdownConverter}}" VerticalScrollBarVisibility="Disabled"/>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Style.Triggers>
+                        <!-- Trigger for Assistant role -->
+                        <DataTrigger Binding="{Binding Role}" Value="Assistant">
+                            <Setter Property="Background" Value="LightBlue" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
         </ListView>
 
         <!-- Input Area -->
