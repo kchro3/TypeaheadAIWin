@@ -2,7 +2,7 @@
 {
     public enum CursorType
     {
-        MouseClick,
-        ScreenReader
+        ScreenReader,
+        MouseCursor
     }
 }

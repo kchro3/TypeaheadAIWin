@@ -30,8 +30,10 @@ namespace TypeaheadAIWin
     {
         private const int WM_HOTKEY = 0x0312;
         private const int HOTKEY_ID = 9000;
+        private const int NEW_HOTKEY_ID = 9001;
         private const uint MOD_CTRL = 0x0002; // Control key
         private const uint MOD_ALT = 0x0001;  // Alt key
+        private const uint VK_N = 0x4E;       // N key
         private const uint VK_T = 0x54;       // T key
 
         [DllImport("user32.dll")]
@@ -78,6 +80,9 @@ namespace TypeaheadAIWin
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
             streamCancellationTokenSource?.Cancel();
+            streamCancellationTokenSource?.Dispose();
+            streamCancellationTokenSource = null;
+
             _speechProcessor.Cancel();
             audio.Stop();
 
@@ -148,51 +153,81 @@ namespace TypeaheadAIWin
             base.OnSourceInitialized(e);
             var helper = new WindowInteropHelper(this);
             RegisterHotKey(helper.Handle, HOTKEY_ID, MOD_CTRL | MOD_ALT, VK_T);
+            RegisterHotKey(helper.Handle, NEW_HOTKEY_ID, MOD_CTRL | MOD_ALT, VK_N);
 
             ComponentDispatcher.ThreadFilterMessage += new ThreadMessageEventHandler(ComponentDispatcher_ThreadFilterMessage);
         }
 
         private void ComponentDispatcher_ThreadFilterMessage(ref MSG msg, ref bool handled)
         {
-            if (msg.message == WM_HOTKEY && (int)msg.wParam == HOTKEY_ID)
+            if (msg.message == WM_HOTKEY)
             {
-                if (this.Visibility == Visibility.Visible)
+                // Handle Screenshot
+                if ((int)msg.wParam == HOTKEY_ID)
                 {
-                    // Close the window if it's already open
-                    this.Hide();
+                    if (this.Visibility == Visibility.Visible)
+                    {
+                        // Close the window if it's already open
+                        this.Hide();
+
+                        streamCancellationTokenSource?.Cancel();
+                        streamCancellationTokenSource?.Dispose();
+                        streamCancellationTokenSource = null;
+                        
+                        chatMessages.Clear();
+                        _speechProcessor.Cancel();
+                        audio.Stop();
+                    }
+                    else
+                    {
+                        // Window is not visible, take a screenshot and open the window
+                        var currentElement = _userDefaults.CursorType switch
+                        {
+                            CursorType.ScreenReader => _axInspector.GetFocusedElement(),
+                            _ => _axInspector.GetElementUnderCursor()
+                        };
+
+                        var bounds = currentElement.Current.BoundingRectangle;
+                        var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
+                        var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
+
+                        // Set the captured information to the text field
+                        Dispatcher.Invoke(() =>
+                        {
+                            // Clear the MessageInput RichTextBox
+                            MessageInput.Document.Blocks.Clear();
+
+                            InsertImageToRichTextBox(imageSource); // Insert the image
+                            MessageInput.Document.Blocks.Add(new Paragraph());
+                            MoveCursorToEnd(MessageInput);        // Move cursor to the end
+
+                            MessageInput.Focus(); // Set focus to the RichTextBox
+                        });
+
+                        // Now open the window
+                        this.Show();
+                        this.Activate(); // Brings window to front and gives it focus
+                    }
+                    handled = true;
+                }
+                else if ((int)msg.wParam == NEW_HOTKEY_ID)
+                {
+                    streamCancellationTokenSource?.Cancel();
+                    streamCancellationTokenSource?.Dispose();
+                    streamCancellationTokenSource = null;
                     chatMessages.Clear();
                     _speechProcessor.Cancel();
                     audio.Stop();
-                }
-                else
-                {
-                    // Window is not visible, take a screenshot and open the window
-                    var currentElement = _userDefaults.CursorType switch
+                    // Clear the MessageInput RichTextBox
+                    MessageInput.Document.Blocks.Clear();
+
+                    if (this.Visibility != Visibility.Visible)
                     {
-                        CursorType.ScreenReader => _axInspector.GetFocusedElement(),
-                        _ => _axInspector.GetElementUnderCursor()
-                    };
+                        this.Show();
+                    }
 
-                    var bounds = currentElement.Current.BoundingRectangle;
-                    var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
-                    var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
-
-                    // Set the captured information to the text field
-                    Dispatcher.Invoke(() => {
-                        // Clear the MessageInput RichTextBox
-                        MessageInput.Document.Blocks.Clear();
-
-                        InsertImageToRichTextBox(imageSource); // Insert the image
-                        MessageInput.Document.Blocks.Add(new Paragraph());
-                        MoveCursorToEnd(MessageInput);        // Move cursor to the end
-
-                        MessageInput.Focus(); // Set focus to the RichTextBox
-                    });
-
-                    // Now open the window
-                    this.Show();
-                    this.Activate(); // Brings window to front and gives it focus
-
+                    this.Activate();
+                    MessageInput.Focus();
                     handled = true;
                 }
             }
@@ -202,6 +237,7 @@ namespace TypeaheadAIWin
         {
             var helper = new WindowInteropHelper(this);
             UnregisterHotKey(helper.Handle, HOTKEY_ID);
+            UnregisterHotKey(helper.Handle, NEW_HOTKEY_ID);
             base.OnClosed(e);
         }
 
@@ -242,6 +278,7 @@ namespace TypeaheadAIWin
         {
             // Cancel the previous stream if it exists
             streamCancellationTokenSource?.Cancel();
+            streamCancellationTokenSource?.Dispose();
             streamCancellationTokenSource = new CancellationTokenSource();
 
             try

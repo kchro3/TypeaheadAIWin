@@ -24,30 +24,13 @@ namespace TypeaheadAIWin.Source
         [ObservableProperty]
         private AutomationElement _focusedElement;
 
-        private FlowDocument _markdownContent;
-
         [ObservableProperty]
         private ChatMessageRole _role;
-
-        public FlowDocument MarkdownContent
-        {
-            get => _markdownContent;
-            set => SetProperty(ref _markdownContent, value);
-        }
 
         // Constructor
         public ChatMessage()
         {
             _text = string.Empty;
-            _markdownContent = new FlowDocument();
-        }
-
-        partial void OnTextChanged(string value)
-        {
-            var md = new Markdown();
-            // Replace all "\n" with "\n\n" in _text
-            string updatedText = _text.Replace("\n", "\n\n");
-            MarkdownContent = md.Transform(updatedText);
         }
     }
 }
