@@ -9,7 +9,7 @@
   <Identity
     Name="TypeaheadAI.TestTypeaheadAI"
     Publisher="CN=AEB9696C-FACD-4F7A-80C3-AD5CF50708D8"
-    Version="1.0.14.0" />
+    Version="1.0.17.0" />
 
   <Properties>
     <DisplayName>TestTypeahead AI</DisplayName>

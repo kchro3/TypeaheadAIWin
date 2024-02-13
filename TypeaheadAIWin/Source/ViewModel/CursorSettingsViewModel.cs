@@ -1,20 +1,19 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Speech.Synthesis;
 using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source.ViewModel
 {
-    public partial class SpeechSettingsViewModel: ObservableObject
+    public partial class CursorSettingsViewModel : ObservableObject
     {
         public UserDefaults UserDefaults;
 
         [ObservableProperty]
-        private Array _promptRates;
+        private Array _cursorTypes;
 
-        public SpeechSettingsViewModel(UserDefaults userDefaults)
+        public CursorSettingsViewModel(UserDefaults userDefaults)
         {
             UserDefaults = userDefaults;
-            PromptRates = Enum.GetValues(typeof(PromptRate));
+            CursorTypes = Enum.GetValues(typeof(CursorType));
         }
     }
 }

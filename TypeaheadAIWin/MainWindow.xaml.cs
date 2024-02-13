@@ -20,8 +20,10 @@ using TypeaheadAIWin.Source;
 using MahApps.Metro.Controls;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Speech;
-using TypeaheadAIWin.Views;
+using TypeaheadAIWin.Source.Model;
+using TypeaheadAIWin.Source.Converters;
 using TypeaheadAIWin.Source.ViewModel;
+using CursorType = TypeaheadAIWin.Source.Model.CursorType;
 
 namespace TypeaheadAIWin
 {
@@ -31,10 +33,13 @@ namespace TypeaheadAIWin
     public partial class MainWindow : MetroWindow
     {
         private const int WM_HOTKEY = 0x0312;
-        private const int HOTKEY_ID = 9000;
+        private const int CURSOR_HOTKEY_ID = 9000;
+        private const int SCREENSHOT_HOTKEY_ID = 9001;
+
         private const uint MOD_CTRL = 0x0002; // Control key
         private const uint MOD_ALT = 0x0001;  // Alt key
         private const uint VK_T = 0x54;       // T key
+        private const uint VK_W = 0x57;       // W key
 
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -45,8 +50,10 @@ namespace TypeaheadAIWin
         private readonly HttpClient client;
         private readonly Supabase.Client _supabaseClient;
         private readonly AXInspector _axInspector;
+        private readonly MainViewModel _viewModel;
         private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
         private readonly StreamingSpeechProcessor _speechProcessor;
+        private readonly UserDefaults _userDefaults;
 
         ObservableCollection<ChatMessage> chatMessages = [];
         private CancellationTokenSource? streamCancellationTokenSource;
@@ -54,16 +61,21 @@ namespace TypeaheadAIWin
         private SoundPlayer audio;
 
         public MainWindow(
-            Supabase.Client supabaseClient,
             AXInspector axInspector,
             ISpeechSynthesizerWrapper speechSynthesizerWrapper,
-            StreamingSpeechProcessor speechProcessor
-        ) {
+            MainViewModel viewModel,
+            StreamingSpeechProcessor speechProcessor,
+            Supabase.Client supabaseClient,
+            UserDefaults userDefaults
+        )
+        {
             InitializeComponent();
             _supabaseClient = supabaseClient;
             _axInspector = axInspector;
             _speechSynthesizerWrapper = speechSynthesizerWrapper;
             _speechProcessor = speechProcessor;
+            _viewModel = viewModel;
+            _userDefaults = userDefaults;
 
             client = new HttpClient();
 
@@ -72,27 +84,6 @@ namespace TypeaheadAIWin
 
             audio = new SoundPlayer(Properties.Resources.snap);
             audio.Load();
-        }
-
-        private void New_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Open_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-        }
-
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -167,33 +158,65 @@ namespace TypeaheadAIWin
         {
             base.OnSourceInitialized(e);
             var helper = new WindowInteropHelper(this);
-            RegisterHotKey(helper.Handle, HOTKEY_ID, MOD_CTRL | MOD_ALT, VK_T);
+            RegisterHotKey(helper.Handle, CURSOR_HOTKEY_ID, MOD_CTRL | MOD_ALT, VK_T);
+            RegisterHotKey(helper.Handle, SCREENSHOT_HOTKEY_ID, MOD_CTRL | MOD_ALT, VK_W);
 
             ComponentDispatcher.ThreadFilterMessage += new ThreadMessageEventHandler(ComponentDispatcher_ThreadFilterMessage);
         }
 
         private void ComponentDispatcher_ThreadFilterMessage(ref MSG msg, ref bool handled)
         {
-            if (msg.message == WM_HOTKEY && (int)msg.wParam == HOTKEY_ID)
+            if (msg.message == WM_HOTKEY)
             {
-                if (this.Visibility == Visibility.Visible)
+                if ((int)msg.wParam == CURSOR_HOTKEY_ID)
                 {
-                    // Close the window if it's already open
-                    this.Hide();
-                    chatMessages.Clear();
-                    _speechProcessor.Cancel();
-                    audio.Stop();
+                    if (this.Visibility == Visibility.Visible)
+                    {
+                        // Close the window if it's already open
+                        this.Hide();
+                        chatMessages.Clear();
+                        _speechProcessor.Cancel();
+                        audio.Stop();
+                    }
+                    else
+                    {
+                        // Window is not visible, take a screenshot and open the window
+                        var currentElement = _userDefaults.CursorType switch
+                        {
+                            CursorType.ScreenReader => _axInspector.GetElementUnderCursor(),
+                            _ => _axInspector.GetFocusedElement(),
+                        };
+
+                        var bounds = currentElement.Current.BoundingRectangle;
+                        var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
+                        var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
+
+                        // Set the captured information to the text field
+                        Dispatcher.Invoke(() => {
+                            // Clear the MessageInput RichTextBox
+                            MessageInput.Document.Blocks.Clear();
+
+                            InsertImageToRichTextBox(imageSource); // Insert the image
+                            MessageInput.Document.Blocks.Add(new Paragraph());
+                            MoveCursorToEnd(MessageInput);        // Move cursor to the end
+
+                            MessageInput.Focus(); // Set focus to the RichTextBox
+                        });
+
+                        // Now open the window
+                        this.Show();
+                        this.Activate(); // Brings window to front and gives it focus
+                    }
                 }
-                else
+                else if (((int)msg.wParam == SCREENSHOT_HOTKEY_ID) && this.Visibility == Visibility.Visible)
                 {
-                    // Window is not visible, take a screenshot and open the window
-                    var currentElement = _axInspector.GetElementUnderCursor();
-                    var bounds = currentElement.Current.BoundingRectangle;
-                    var screenshot = ScreenshotUtil.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
+                    // Logic to take a screenshot of the entire screen
+                    var screenshot = ScreenshotUtil.CaptureFullScreen();
                     var imageSource = ScreenshotUtil.ConvertBitmapToImageSource(screenshot);
 
-                    // Set the captured information to the text field
-                    Dispatcher.Invoke(() => {
+                    // Assuming you have a method to insert the screenshot into your application, similar to InsertImageToRichTextBox
+                    Dispatcher.Invoke(() =>
+                    {
                         // Clear the MessageInput RichTextBox
                         MessageInput.Document.Blocks.Clear();
 
@@ -207,9 +230,9 @@ namespace TypeaheadAIWin
                     // Now open the window
                     this.Show();
                     this.Activate(); // Brings window to front and gives it focus
-
-                    handled = true;
                 }
+
+                handled = true;
             }
         }
 
@@ -270,7 +293,7 @@ namespace TypeaheadAIWin
         protected override void OnClosed(EventArgs e)
         {
             var helper = new WindowInteropHelper(this);
-            UnregisterHotKey(helper.Handle, HOTKEY_ID);
+            UnregisterHotKey(helper.Handle, CURSOR_HOTKEY_ID);
             base.OnClosed(e);
         }
 

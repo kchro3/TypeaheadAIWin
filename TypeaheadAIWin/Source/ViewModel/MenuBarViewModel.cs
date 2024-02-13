@@ -1,13 +1,18 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
-using TypeaheadAIWin.Views;
+using TypeaheadAIWin.Source.Model;
+using TypeaheadAIWin.Source.Views;
 
 namespace TypeaheadAIWin.Source.ViewModel
 {
     public partial class MenuBarViewModel: ObservableObject
     {
-        public MenuBarViewModel() { }
+        private readonly UserDefaults _userDefaults;
+
+        public MenuBarViewModel(UserDefaults userDefaults) {
+            _userDefaults = userDefaults;
+        }
 
         [RelayCommand]
         private void New()
@@ -35,6 +40,13 @@ namespace TypeaheadAIWin.Source.ViewModel
         {
             // Implement the action for the Exit command
             Application.Current.Shutdown();
+        }
+
+        [RelayCommand]
+        private void Cursor()
+        {
+            var cursorSettingsWindow = new CursorSettingsWindow(_userDefaults);
+            cursorSettingsWindow.ShowDialog();
         }
 
         [RelayCommand]

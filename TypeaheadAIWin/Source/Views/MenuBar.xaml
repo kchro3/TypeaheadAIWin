@@ -2,9 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:TypeaheadAIWin.Source.Views" 
-             xmlns:vm="clr-namespace:TypeaheadAIWin.Source.ViewModel"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d" 
              d:DesignHeight="40" d:DesignWidth="800">
     <!--<UserControl.DataContext>
@@ -13,7 +11,7 @@
     </UserControl.DataContext>-->
     
     <Grid>
-        <Menu Grid.Row="0" VerticalAlignment="Top">
+        <Menu AutomationProperties.Name="MenuBar" Grid.Row="0" VerticalAlignment="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Command="{Binding NewCommand}"/>
                 <MenuItem Header="_Open" Command="{Binding OpenCommand}"/>
@@ -22,6 +20,7 @@
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}"/>
             </MenuItem>
             <MenuItem Header="_Settings">
+                <MenuItem Header="_Cursor" Command="{Binding CursorCommand}"/>
                 <MenuItem Header="_Speech" Command="{Binding SpeechCommand}"/>
             </MenuItem>
             <MenuItem Header="_Help">

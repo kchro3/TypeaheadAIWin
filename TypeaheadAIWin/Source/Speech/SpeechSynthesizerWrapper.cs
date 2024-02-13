@@ -1,4 +1,5 @@
 ﻿using System.Speech.Synthesis;
+using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source.Speech
 {
@@ -7,41 +8,19 @@ namespace TypeaheadAIWin.Source.Speech
         void SpeakAsync(string text);
 
         void SpeakAsyncCancelAll();
-
-        // Property for PromptRate with getter and setter
-        PromptRate PromptRate { get; set; }
     }
 
     // Wrapper for SpeechSynthesizer to allow for easier testing
     public class SpeechSynthesizerWrapper : ISpeechSynthesizerWrapper
     {
-        private readonly SpeechSynthesizer synthesizer;
-        
-        public PromptRate PromptRate
-        {
-            get
-            {
-                var rate = Properties.Settings.Default.PromptRate;
-                if (Enum.IsDefined(typeof(PromptRate), rate))
-                {
-                    return (PromptRate)rate;
-                }
-                else
-                {
-                    return PromptRate.NotSet;
-                }
-            }
-            set
-            {
-                Properties.Settings.Default.PromptRate = (int)value;
-                Properties.Settings.Default.Save();
-            }
-        }
+        private readonly SpeechSynthesizer _synthesizer;
+        private readonly UserDefaults _userDefaults;
 
-        public SpeechSynthesizerWrapper()
+        public SpeechSynthesizerWrapper(UserDefaults userDefaults)
         {
-            synthesizer = new SpeechSynthesizer();
-            synthesizer.SetOutputToDefaultAudioDevice();
+            _userDefaults = userDefaults;
+            _synthesizer = new SpeechSynthesizer();
+            _synthesizer.SetOutputToDefaultAudioDevice();
         }
 
         /**
@@ -50,19 +29,19 @@ namespace TypeaheadAIWin.Source.Speech
         public void SpeakAsync(string text)
         {
             PromptBuilder builder = new PromptBuilder();
-            builder.StartStyle(new PromptStyle()
-            {
-                Rate = PromptRate
+            builder.StartStyle(new PromptStyle() 
+            { 
+                Rate = _userDefaults.PromptRate
             });
             builder.AppendText(text);
             builder.EndStyle();
 
-            synthesizer.SpeakAsync(builder);
+            _synthesizer.SpeakAsync(builder);
         }
 
         public void SpeakAsyncCancelAll()
         {
-            synthesizer.SpeakAsyncCancelAll();
+            _synthesizer.SpeakAsyncCancelAll();
         }
     }
 }

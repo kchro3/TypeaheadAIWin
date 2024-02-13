@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Windows;
 using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.ViewModel;
 using TypeaheadAIWin.Source.Views;
@@ -48,11 +49,14 @@ namespace TypeaheadAIWin
             var supabaseClient = CreateSupabaseClientAsync().GetAwaiter().GetResult(); // This is a blocking call
 
             // Bind singletons
-            services.AddSingleton<AXInspector>(); 
+            services.AddSingleton<AXInspector>();
+            services.AddSingleton<CursorSettingsViewModel>();
+            services.AddSingleton<MainViewModel>();
             services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);
+            services.AddSingleton<UserDefaults>();
 
             // Bind scoped
             services.AddScoped<ISpeechSynthesizerWrapper, SpeechSynthesizerWrapper>();
@@ -102,6 +106,13 @@ namespace TypeaheadAIWin
                 Trace.WriteLine("User is logged in.");
                 mainWindow.Show();
             }
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            var axInspector = _serviceProvider.GetRequiredService<AXInspector>();
+            axInspector.Unsubscribe();
+            base.OnExit(e);
         }
 
         private async Task<Supabase.Client> CreateSupabaseClientAsync()

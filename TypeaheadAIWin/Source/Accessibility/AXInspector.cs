@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 
@@ -22,7 +18,12 @@ namespace TypeaheadAIWin.Source.Accessibility
             public int Y;
         }
 
-        public AXInspector() { }
+        private AutomationElement focusedElement;
+
+        public AXInspector() {
+            focusedElement = AutomationElement.FocusedElement;
+            Subscribe();
+        }
 
         public AutomationElement GetElementUnderCursor()
         {
@@ -48,6 +49,30 @@ namespace TypeaheadAIWin.Source.Accessibility
             {
                 throw new InvalidOperationException("Failed to get cursor position.");
             }
+        }
+
+        public AutomationElement GetFocusedElement()
+        {
+            return focusedElement;
+        }
+
+        private void Subscribe()
+        {
+            Automation.AddAutomationFocusChangedEventHandler(OnFocusChanged);
+        }
+
+        private void OnFocusChanged(object sender, AutomationFocusChangedEventArgs e)
+        {
+            var element = sender as AutomationElement;
+            if (element != null)
+            {
+                focusedElement = element;
+            }
+        }
+
+        public void Unsubscribe()
+        {
+            Automation.RemoveAutomationFocusChangedEventHandler(OnFocusChanged);
         }
     }
 }
