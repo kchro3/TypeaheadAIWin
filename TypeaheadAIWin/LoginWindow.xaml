@@ -7,6 +7,7 @@
                  xmlns:local="clr-namespace:TypeaheadAIWin.Source"
                  mc:Ignorable="d"
                  Title="Typeahead AI"
+                 AutomationProperties.Name="Type Ahead AI"
                  Height="350" Width="350"
                  Background="LightBlue">
         <Grid Margin="10">
