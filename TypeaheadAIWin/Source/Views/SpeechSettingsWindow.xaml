@@ -23,7 +23,7 @@
                 <TextBlock Text="Rate:" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 <ComboBox x:Name="RateComboBox" Width="200"
                           ItemsSource="{Binding PromptRates}"
-                          SelectedItem="{Binding SelectedPromptRate}">
+                          SelectedItem="{Binding UserDefaults.PromptRate}">
                     <!-- Items are now bound dynamically -->
                 </ComboBox>
             </StackPanel>

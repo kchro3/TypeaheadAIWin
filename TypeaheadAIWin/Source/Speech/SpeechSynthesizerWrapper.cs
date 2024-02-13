@@ -1,4 +1,5 @@
 ﻿using System.Speech.Synthesis;
+using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source.Speech
 {
@@ -7,41 +8,19 @@ namespace TypeaheadAIWin.Source.Speech
         void SpeakAsync(string text);
 
         void SpeakAsyncCancelAll();
-
-        // Property for PromptRate with getter and setter
-        PromptRate PromptRate { get; set; }
     }
 
     // Wrapper for SpeechSynthesizer to allow for easier testing
     public class SpeechSynthesizerWrapper : ISpeechSynthesizerWrapper
     {
-        private readonly SpeechSynthesizer synthesizer;
+        private readonly SpeechSynthesizer _synthesizer;
+        private readonly UserDefaults _userDefaults;
         
-        public PromptRate PromptRate
+        public SpeechSynthesizerWrapper(UserDefaults userDefaults)
         {
-            get
-            {
-                var rate = Properties.Settings.Default.PromptRate;
-                if (Enum.IsDefined(typeof(PromptRate), rate))
-                {
-                    return (PromptRate)rate;
-                }
-                else
-                {
-                    return PromptRate.NotSet;
-                }
-            }
-            set
-            {
-                Properties.Settings.Default.PromptRate = (int)value;
-                Properties.Settings.Default.Save();
-            }
-        }
-
-        public SpeechSynthesizerWrapper()
-        {
-            synthesizer = new SpeechSynthesizer();
-            synthesizer.SetOutputToDefaultAudioDevice();
+            _synthesizer = new SpeechSynthesizer();
+            _synthesizer.SetOutputToDefaultAudioDevice();
+            _userDefaults = userDefaults;
         }
 
         /**
@@ -52,17 +31,17 @@ namespace TypeaheadAIWin.Source.Speech
             PromptBuilder builder = new PromptBuilder();
             builder.StartStyle(new PromptStyle()
             {
-                Rate = PromptRate
+                Rate = _userDefaults.PromptRate
             });
             builder.AppendText(text);
             builder.EndStyle();
 
-            synthesizer.SpeakAsync(builder);
+            _synthesizer.SpeakAsync(builder);
         }
 
         public void SpeakAsyncCancelAll()
         {
-            synthesizer.SpeakAsyncCancelAll();
+            _synthesizer.SpeakAsyncCancelAll();
         }
     }
 }

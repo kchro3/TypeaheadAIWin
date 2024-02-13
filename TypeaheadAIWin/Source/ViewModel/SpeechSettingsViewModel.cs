@@ -1,31 +1,20 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Speech.Synthesis;
-using TypeaheadAIWin.Source.Speech;
+using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source.ViewModel
 {
     public partial class SpeechSettingsViewModel: ObservableObject
     {
-        private readonly ISpeechSynthesizerWrapper _speechSynthesizer;
+        public UserDefaults UserDefaults { get; }
 
         [ObservableProperty]
 		private Array _promptRates;
 
-        [ObservableProperty]
-        private PromptRate _selectedPromptRate;
-
-        public SpeechSettingsViewModel(ISpeechSynthesizerWrapper speechSynthesizer)
+        public SpeechSettingsViewModel(UserDefaults userDefaults)
         {
-            _speechSynthesizer = speechSynthesizer;
+            UserDefaults = userDefaults;
             PromptRates = Enum.GetValues(typeof(PromptRate));
-            SelectedPromptRate = speechSynthesizer.PromptRate;
-        }
-
-        // This method is automatically called when SelectedPromptRate changes
-        partial void OnSelectedPromptRateChanged(PromptRate value)
-        {
-            // Synchronize the change with the speech synthesizer
-            _speechSynthesizer.PromptRate = value;
         }
     }
 }
