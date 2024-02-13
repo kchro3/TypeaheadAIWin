@@ -1,19 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Windows.Forms;
 
 namespace TypeaheadAIWin.Source
 {
     internal static class ScreenshotUtil
     {
+        public static Bitmap CaptureFullScreen()
+        {
+            var screenSize = SystemInformation.PrimaryMonitorSize;
+            var bitmap = new Bitmap(screenSize.Width, screenSize.Height);
+            using (var g = Graphics.FromImage(bitmap))
+            {
+                g.CopyFromScreen(Point.Empty, Point.Empty, screenSize);
+            }
+            return bitmap;
+        }
+
         public static Bitmap? CaptureArea(int x, int y, int width, int height, int maxWidth = 1024)
         {
             if (width <= 0 || height <= 0)

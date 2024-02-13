@@ -4,15 +4,19 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-                 xmlns:local="clr-namespace:TypeaheadAIWin.Source" xmlns:views="clr-namespace:TypeaheadAIWin.Source.Views"
+                 xmlns:local="clr-namespace:TypeaheadAIWin.Source" 
+                 xmlns:views="clr-namespace:TypeaheadAIWin.Source.Views"
+                 xmlns:converter="clr-namespace:TypeaheadAIWin.Source.Converters"
                  mc:Ignorable="d"
                  Title="Typeahead AI"
+                 AutomationProperties.Name="Type Ahead AI"
                  Height="450" Width="800"
                  ShowTitleBar="False" ShowSystemMenuOnRightClick="False">
-    
+
     <Window.Resources>
-        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-        <local:ChatMessageRoleToNameConverter x:Key="ChatMessageRoleToNameConverter"/>
+        <converter:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
+        <converter:ChatMessageRoleToNameConverter x:Key="ChatMessageRoleToNameConverter"/>
+        <converter:ChatMessageRoleToBackgroundConverter x:Key="ChatMessageRoleToBackgroundConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -23,16 +27,23 @@
         </Grid.RowDefinitions>
 
         <views:MenuBar />
-
+        
         <!-- ListView for Chat Messages -->
-        <ListView x:Name="ChatHistoryListView" Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
+        <ListView x:Name="ChatHistoryListView"
+                  AutomationProperties.Name="ChatHistoryListView"
+                  Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                   AutomationProperties.LiveSetting="Polite">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel AutomationProperties.Name="{Binding Role, Converter={StaticResource ChatMessageRoleToNameConverter}}">
-                        <Image Source="{Binding Image}" Visibility="{Binding Image, Converter={StaticResource NullToVisibilityConverter}}"/>
-                        <FlowDocumentScrollViewer Document="{Binding MarkdownContent}" VerticalScrollBarVisibility="Disabled"/>
+                    <StackPanel Background="{Binding Role, Converter={StaticResource ChatMessageRoleToBackgroundConverter}}"
+                                Margin="0">
+                        <TextBlock x:Name="MessageContext" Text="{Binding Role, Converter={StaticResource ChatMessageRoleToNameConverter}}" 
+                           FontWeight="Light"
+                           Visibility="{Binding Role, Converter={StaticResource NullToVisibilityConverter}}"
+                           Margin="0,0,0,5"/>
+                        <Image x:Name="MessageImage" Source="{Binding Image}" Visibility="{Binding Image, Converter={StaticResource NullToVisibilityConverter}}"/>
+                        <FlowDocumentScrollViewer x:Name="MessageBody" Document="{Binding MarkdownContent}" VerticalScrollBarVisibility="Disabled"/>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -41,7 +52,7 @@
         <!-- Input Area -->
         <DockPanel Grid.Row="2" LastChildFill="True">
             <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" Click="SendButton_Click"/>
-            <RichTextBox x:Name="MessageInput"
+            <RichTextBox x:Name="MessageInput" AutomationProperties.Name="MessageInput"
                 MaxHeight="200"
                 Margin="5"
                 AcceptsReturn="True"

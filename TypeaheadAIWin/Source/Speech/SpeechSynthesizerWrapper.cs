@@ -15,12 +15,12 @@ namespace TypeaheadAIWin.Source.Speech
     {
         private readonly SpeechSynthesizer _synthesizer;
         private readonly UserDefaults _userDefaults;
-        
+
         public SpeechSynthesizerWrapper(UserDefaults userDefaults)
         {
+            _userDefaults = userDefaults;
             _synthesizer = new SpeechSynthesizer();
             _synthesizer.SetOutputToDefaultAudioDevice();
-            _userDefaults = userDefaults;
         }
 
         /**
@@ -29,8 +29,8 @@ namespace TypeaheadAIWin.Source.Speech
         public void SpeakAsync(string text)
         {
             PromptBuilder builder = new PromptBuilder();
-            builder.StartStyle(new PromptStyle()
-            {
+            builder.StartStyle(new PromptStyle() 
+            { 
                 Rate = _userDefaults.PromptRate
             });
             builder.AppendText(text);

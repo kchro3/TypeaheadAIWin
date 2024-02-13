@@ -46,5 +46,17 @@ namespace TypeaheadAIWin.Properties {
                 this["PromptRate"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int CursorType {
+            get {
+                return ((int)(this["CursorType"]));
+            }
+            set {
+                this["CursorType"] = value;
+            }
+        }
     }
 }

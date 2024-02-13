@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using System.Windows.Data;
+using TypeaheadAIWin.Source.Model;
 
-namespace TypeaheadAIWin.Source
+namespace TypeaheadAIWin.Source.Converters
 {
     public class ChatMessageRoleToNameConverter : IValueConverter
     {
@@ -17,16 +13,16 @@ namespace TypeaheadAIWin.Source
                 switch (role)
                 {
                     case ChatMessageRole.User:
-                        return "User Message";
+                        return "User";
                     case ChatMessageRole.Tool:
-                        return "Tool Message";
+                        return "Tool";
                     case ChatMessageRole.Assistant:
-                        return "Assistant Message";
+                        return "Assistant";
                     default:
-                        return "Unknown Message";
+                        return "Unknown Role";
                 }
             }
-            return "Unknown Message";
+            return "Unknown Role";
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

@@ -1,12 +1,12 @@
-﻿<Window x:Class="TypeaheadAIWin.SourceViews.SpeechSettingsWindow"
+﻿<Window x:Class="TypeaheadAIWin.Source.Views.CursorSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TypeaheadAIWin.Source.Views"
-        mc:Ignorable="d"
+        mc:Ignorable="d"        
         WindowStyle="None" WindowStartupLocation="CenterOwner"
-        Title="Speech Settings" Height="200" Width="300">
+        Title="Cursor Settings" Height="200" Width="300">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -15,15 +15,15 @@
         </Grid.RowDefinitions>
 
         <!-- Header TextBlock -->
-        <TextBlock Grid.Row="0" Text="Speech Settings" HorizontalAlignment="Center" Margin="10" FontWeight="Bold" FontSize="16"/>
+        <TextBlock Grid.Row="0" Text="Cursor Settings" HorizontalAlignment="Center" Margin="10" FontWeight="Bold" FontSize="16"/>
 
         <!-- Content Panel -->
         <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,10">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="Rate:" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <ComboBox x:Name="RateComboBox" Width="200"
-                          ItemsSource="{Binding PromptRates}"
-                          SelectedItem="{Binding UserDefaults.PromptRate}">
+                <TextBlock Text="Cursor Type:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <ComboBox x:Name="CursorTypeComboBox" Width="200"
+                          ItemsSource="{Binding CursorTypes}"
+                          SelectedItem="{Binding UserDefaults.CursorType}">
                     <!-- Items are now bound dynamically -->
                 </ComboBox>
             </StackPanel>

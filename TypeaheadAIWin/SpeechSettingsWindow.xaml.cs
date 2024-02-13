@@ -2,7 +2,7 @@
 using System.Windows;
 using TypeaheadAIWin.Source.ViewModel;
 
-namespace TypeaheadAIWin.Views
+namespace TypeaheadAIWin.Source.Views
 {
     /// <summary>
     /// Interaction logic for SpeechSettingsWindow.xaml

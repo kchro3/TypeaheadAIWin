@@ -50,6 +50,8 @@ namespace TypeaheadAIWin
 
             // Bind singletons
             services.AddSingleton<AXInspector>();
+            services.AddSingleton<CursorSettingsViewModel>();
+            services.AddSingleton<MainViewModel>();
             services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();
@@ -104,6 +106,13 @@ namespace TypeaheadAIWin
                 Trace.WriteLine("User is logged in.");
                 mainWindow.Show();
             }
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            var axInspector = _serviceProvider.GetRequiredService<AXInspector>();
+            axInspector.Unsubscribe();
+            base.OnExit(e);
         }
 
         private async Task<Supabase.Client> CreateSupabaseClientAsync()

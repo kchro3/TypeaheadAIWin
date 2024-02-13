@@ -1,12 +1,7 @@
 ﻿using Supabase.Gotrue;
 using Supabase.Gotrue.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace TypeaheadAIWin.Source
 {
@@ -14,14 +9,12 @@ namespace TypeaheadAIWin.Source
     {
         void IGotrueSessionPersistence<Session>.DestroySession()
         {
-            Trace.WriteLine("Destroy");
             Properties.Settings.Default.Session = null;
             Properties.Settings.Default.Save();
         }
 
         Session? IGotrueSessionPersistence<Session>.LoadSession()
         {
-            Trace.WriteLine("Load");
             try
             {
                 if (Properties.Settings.Default.Session != null)
@@ -39,7 +32,6 @@ namespace TypeaheadAIWin.Source
 
         void IGotrueSessionPersistence<Session>.SaveSession(Session session)
         {
-            Trace.WriteLine("Save");
             Properties.Settings.Default.Session = JsonSerializer.Serialize(session);
             Properties.Settings.Default.Save();
         }

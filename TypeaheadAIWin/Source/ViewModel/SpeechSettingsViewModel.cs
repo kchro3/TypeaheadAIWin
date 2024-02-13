@@ -9,7 +9,7 @@ namespace TypeaheadAIWin.Source.ViewModel
         public UserDefaults UserDefaults { get; }
 
         [ObservableProperty]
-		private Array _promptRates;
+        private Array _promptRates;
 
         public SpeechSettingsViewModel(UserDefaults userDefaults)
         {

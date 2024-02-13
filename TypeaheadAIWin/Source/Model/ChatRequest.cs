@@ -1,4 +1,4 @@
-﻿namespace TypeaheadAIWin.Source
+﻿namespace TypeaheadAIWin.Source.Model
 {
     public class ChatRequest
     {

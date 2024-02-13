@@ -3,9 +3,10 @@ using System.Text.Json;
 using System.IO;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using TypeaheadAIWin.Source.Model;
 
 
-namespace TypeaheadAIWin.Source
+namespace TypeaheadAIWin.Source.Converters
 {
     /**
      * This class is used to serialize ChatMessage objects to JSON.
