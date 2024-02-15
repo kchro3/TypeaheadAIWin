@@ -50,8 +50,9 @@ namespace TypeaheadAIWin
         private readonly UserDefaults _userDefaults;
 
         ObservableCollection<ChatMessage> chatMessages = [];
+        private ApplicationContext appContext;
         private CancellationTokenSource? streamCancellationTokenSource;
-        
+
         private SoundPlayer audio;
 
         public MainWindow(
@@ -69,6 +70,7 @@ namespace TypeaheadAIWin
             _userDefaults = userDefaults;
 
             client = new HttpClient();
+            appContext = _axInspector.GetCurrentAppContext();
 
             ChatHistoryListView.ItemsSource = chatMessages;
             chatMessages.CollectionChanged += ChatMessages_CollectionChanged;
@@ -180,6 +182,7 @@ namespace TypeaheadAIWin
                     }
                     else
                     {
+                        appContext = _axInspector.GetCurrentAppContext();
                         // Window is not visible, take a screenshot and open the window
                         var currentElement = _userDefaults.CursorType switch
                         {
@@ -223,6 +226,7 @@ namespace TypeaheadAIWin
 
                     if (this.Visibility != Visibility.Visible)
                     {
+                        appContext = _axInspector.GetCurrentAppContext();
                         this.Show();
                     }
 
@@ -341,6 +345,7 @@ namespace TypeaheadAIWin
             {
                 Uuid = uuid,
                 Messages = chatMessages.ToList(),
+                AppContext = appContext,
             };
 
             var options = new JsonSerializerOptions

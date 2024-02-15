@@ -1,10 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using MdXaml;
 using System.Windows.Automation;
-using System.Windows.Documents;
 using System.Windows.Media;
 
-namespace TypeaheadAIWin.Source
+namespace TypeaheadAIWin.Source.Model
 {
     public enum ChatMessageRole
     {

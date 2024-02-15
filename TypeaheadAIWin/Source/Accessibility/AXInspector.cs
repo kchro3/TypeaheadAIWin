@@ -1,6 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Automation;
+using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source.Accessibility
 {
@@ -9,6 +11,12 @@ namespace TypeaheadAIWin.Source.Accessibility
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool GetCursorPos(out POINT lpPoint);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct POINT
@@ -53,6 +61,23 @@ namespace TypeaheadAIWin.Source.Accessibility
         public AutomationElement GetFocusedElement()
         {
             return focusedElement;
+        }
+
+        public ApplicationContext GetCurrentAppContext()
+        {
+            IntPtr hWnd = GetForegroundWindow();
+            GetWindowThreadProcessId(hWnd, out uint pid);
+
+            using Process process = Process.GetProcessById((int)pid);
+
+            ApplicationContext context = new ApplicationContext()
+            {
+                AppName = process.MainWindowTitle,
+                ProcessName = process.ProcessName,
+                Pid = pid
+            };
+
+            return context;
         }
 
         private void Subscribe()
