@@ -6,20 +6,13 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
-using System.IO;
-using System.Collections.ObjectModel;
-using System.Media;
-using System.Net.Http;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using TypeaheadAIWin.Source;
 using MahApps.Metro.Controls;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.Model;
 using CursorType = TypeaheadAIWin.Source.Model.CursorType;
+using TypeaheadAIWin.Source.ViewModel;
 
 namespace TypeaheadAIWin
 {
@@ -42,20 +35,14 @@ namespace TypeaheadAIWin
         [DllImport("user32.dll")]
         private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-        private readonly HttpClient client;
-        private readonly Supabase.Client _supabaseClient;
+        private readonly ChatWindowViewModel _viewModel;
         private readonly AXInspector _axInspector;
-        private readonly ISpeechSynthesizerWrapper _speechSynthesizerWrapper;
-        private readonly StreamingSpeechProcessor _speechProcessor;
         private readonly UserDefaults _userDefaults;
 
-        ObservableCollection<ChatMessage> chatMessages = [];
         private ApplicationContext appContext;
-        private CancellationTokenSource? streamCancellationTokenSource;
-
-        private SoundPlayer audio;
 
         public MainWindow(
+            ChatWindowViewModel viewModel,
             Supabase.Client supabaseClient,
             AXInspector axInspector,
             ISpeechSynthesizerWrapper speechSynthesizerWrapper,
@@ -63,30 +50,19 @@ namespace TypeaheadAIWin
             UserDefaults userDefaults
         ) {
             InitializeComponent();
-            _supabaseClient = supabaseClient;
+            _viewModel = viewModel;
             _axInspector = axInspector;
-            _speechSynthesizerWrapper = speechSynthesizerWrapper;
-            _speechProcessor = speechProcessor;
             _userDefaults = userDefaults;
 
-            client = new HttpClient();
             appContext = _axInspector.GetCurrentAppContext();
 
-            ChatHistoryListView.ItemsSource = chatMessages;
-            chatMessages.CollectionChanged += ChatMessages_CollectionChanged;
-
-            audio = new SoundPlayer(Properties.Resources.snap);
-            audio.Load();
+            ChatHistoryListView.ItemsSource = _viewModel.ChatMessages;
+            _viewModel.ChatMessages.CollectionChanged += ChatMessages_CollectionChanged;
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            streamCancellationTokenSource?.Cancel();
-            streamCancellationTokenSource?.Dispose();
-            streamCancellationTokenSource = null;
-
-            _speechProcessor.Cancel();
-            audio.Stop();
+            _viewModel.Cancel();
 
             var chatMessage = new ChatMessage
             {
@@ -124,20 +100,11 @@ namespace TypeaheadAIWin
             // Check if there's content to send
             if (!string.IsNullOrEmpty(chatMessage.Text) || chatMessage.Image != null)
             {
-                chatMessages.Add(chatMessage); // Add the message to the ObservableCollection
+                _viewModel.SendMessage(chatMessage, appContext);
 
                 // Clear the MessageInput RichTextBox
                 MessageInput.Document.Blocks.Clear();
                 MessageInput.Document.Blocks.Add(new Paragraph());
-
-                // Play the snap sound on a loop
-                audio.PlayLooping();
-
-                // Send chat history as an RPC
-                Task.Run(async () =>
-                {
-                    await SendChatHistoryAsync();
-                });
             }
         }
 
@@ -172,13 +139,8 @@ namespace TypeaheadAIWin
                         // Close the window if it's already open
                         this.Hide();
 
-                        streamCancellationTokenSource?.Cancel();
-                        streamCancellationTokenSource?.Dispose();
-                        streamCancellationTokenSource = null;
-                        
-                        chatMessages.Clear();
-                        _speechProcessor.Cancel();
-                        audio.Stop();
+                        _viewModel.Cancel();
+                        _viewModel.Clear();
                     }
                     else
                     {
@@ -215,12 +177,9 @@ namespace TypeaheadAIWin
                 }
                 else if ((int)msg.wParam == NEW_HOTKEY_ID)
                 {
-                    streamCancellationTokenSource?.Cancel();
-                    streamCancellationTokenSource?.Dispose();
-                    streamCancellationTokenSource = null;
-                    chatMessages.Clear();
-                    _speechProcessor.Cancel();
-                    audio.Stop();
+                    _viewModel.Cancel();
+                    _viewModel.Clear();
+
                     // Clear the MessageInput RichTextBox
                     MessageInput.Document.Blocks.Clear();
 
@@ -276,118 +235,6 @@ namespace TypeaheadAIWin
 
             richTextBox.CaretPosition = richTextBox.Document.ContentEnd;
             richTextBox.ScrollToEnd();
-        }
-
-        private async Task SendChatHistoryAsync()
-        {
-            // Cancel the previous stream if it exists
-            streamCancellationTokenSource?.Cancel();
-            streamCancellationTokenSource?.Dispose();
-            streamCancellationTokenSource = new CancellationTokenSource();
-
-            try
-            {
-                var completionResult = CreateCompletionAsStream(streamCancellationTokenSource.Token);
-                audio.Stop();
-                await foreach (var completion in completionResult)
-                {
-                    Trace.WriteLine(completion);
-                    Dispatcher.Invoke(() =>
-                    {
-                        AppendToLastAssistantMessage(completion);
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(ex);
-            }
-        }
-
-        private void AppendToLastAssistantMessage(ChatResponse response)
-        {
-            if (response.FinishReason != null)
-            {
-                // Check if the last message in the collection is an assistant message                
-                if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
-                {
-                    _speechProcessor.FlushBuffer();
-                }
-            } 
-            else if (response.Text != null)
-            {
-                _speechProcessor.ProcessToken(response.Text);
-
-                // Check if the last message in the collection is an assistant message
-                if (chatMessages.Count > 0 && chatMessages.Last().Role == ChatMessageRole.Assistant)
-                {
-                    // Append the text to the last assistant message
-                    chatMessages.Last().Text += response.Text;
-                }
-                else
-                {
-                    // If the last message is not an assistant message, create a new one
-                    var chatMessage = new ChatMessage
-                    {
-                        Role = ChatMessageRole.Assistant,
-                        Text = response.Text,
-                    };
-                    chatMessages.Add(chatMessage);
-                }
-            }
-        }
-
-        public async IAsyncEnumerable<ChatResponse> CreateCompletionAsStream(
-            [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            var uuid = _supabaseClient.Auth.CurrentUser?.Id ?? throw new InvalidOperationException("User is not authenticated");
-            var requestData = new ChatRequest
-            {
-                Uuid = uuid,
-                Messages = chatMessages.ToList(),
-                AppContext = appContext,
-            };
-
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
-            };
-
-            using var response = client.PostAsStreamAsync(
-                AppConfig.GetApiBaseUrl() + "/v5/wstream",
-                requestData, 
-                new JsonSerializerOptions
-                {
-                    Converters = { new ChatMessageJsonConverter() },
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-                    PropertyNameCaseInsensitive = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
-                },
-                cancellationToken
-            );
-
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            using var reader = new StreamReader(stream);
-            // Continuously read the stream until the end of it
-            while (!reader.EndOfStream)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var line = await reader.ReadLineAsync(cancellationToken);
-
-                // Skip empty lines
-                if (string.IsNullOrEmpty(line))
-                {
-                    continue;
-                }
-
-                var responseObj = JsonSerializer.Deserialize<ChatResponse>(line, options: options);
-                if (responseObj != null)
-                {
-                    yield return responseObj;
-                }
-            }
         }
     }
 }

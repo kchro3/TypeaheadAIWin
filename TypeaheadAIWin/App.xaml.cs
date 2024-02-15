@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System.Configuration;
-using System.Data;
-using System.Diagnostics;
+using System.Media;
+using System.Net.Http;
 using System.Windows;
 using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Model;
+using TypeaheadAIWin.Source.Service;
 using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.ViewModel;
 using TypeaheadAIWin.Source.Views;
@@ -48,10 +48,18 @@ namespace TypeaheadAIWin
             // Synchronously initialize Supabase client
             var supabaseClient = CreateSupabaseClientAsync().GetAwaiter().GetResult(); // This is a blocking call
 
+            // Initialize the SoundPlayer
+            var soundPlayer = new SoundPlayer(TypeaheadAIWin.Properties.Resources.snap);
+            soundPlayer.Load();
+
             // Bind singletons
             services.AddSingleton<AXInspector>();
             services.AddSingleton<CursorSettingsViewModel>();
+            services.AddSingleton<ChatService>();
+            services.AddSingleton<ChatWindowViewModel>();
+            services.AddSingleton<HttpClient>();
             services.AddSingleton<MenuBarViewModel>();
+            services.AddSingleton(soundPlayer);
             services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);
@@ -75,7 +83,6 @@ namespace TypeaheadAIWin
 
             if (session == null)
             {
-                Trace.WriteLine("User is not signed in");
                 try
                 {
                     var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
@@ -102,7 +109,6 @@ namespace TypeaheadAIWin
             }
             else
             {
-                Trace.WriteLine("User is logged in.");
                 mainWindow.Show();
             }
         }
@@ -114,6 +120,7 @@ namespace TypeaheadAIWin
 
             var options = new Supabase.SupabaseOptions
             {
+                AutoRefreshToken = true,
                 AutoConnectRealtime = true,
                 SessionHandler = new SupabaseSessionHandler()
             };
