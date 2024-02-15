@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Windows.Data;
+using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source
 {
