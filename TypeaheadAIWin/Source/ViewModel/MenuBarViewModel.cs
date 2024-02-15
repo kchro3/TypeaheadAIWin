@@ -7,27 +7,31 @@ namespace TypeaheadAIWin.Source.ViewModel
 {
     public partial class MenuBarViewModel: ObservableObject
     {
-        public MenuBarViewModel() { }
+        private readonly ChatWindowViewModel _chatWindowViewModel;
+
+        public MenuBarViewModel(ChatWindowViewModel chatWindowViewModel) {
+            _chatWindowViewModel = chatWindowViewModel;
+        }
 
         [RelayCommand]
         private void New()
         {
-            // Implement the action for the New command
-            MessageBox.Show("New command executed.");
+            _chatWindowViewModel.Cancel();
+            _chatWindowViewModel.Clear();
         }
 
         [RelayCommand]
         private void Open()
         {
             // Implement the action for the Open command
-            MessageBox.Show("Open command executed.");
+            MessageBox.Show("Not implemented yet.");
         }
 
         [RelayCommand]
         private void Save()
         {
             // Implement the action for the Save command
-            MessageBox.Show("Save command executed.");
+            MessageBox.Show("Not implemented yet.");
         }
 
         [RelayCommand]
@@ -55,7 +59,7 @@ namespace TypeaheadAIWin.Source.ViewModel
         private void About()
         {
             // Implement the action for the About command
-            MessageBox.Show("About command executed.");
+            MessageBox.Show("Not implemented yet.");
         }
     }
 }
