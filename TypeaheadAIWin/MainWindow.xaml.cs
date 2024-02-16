@@ -9,7 +9,6 @@ using System.Windows.Threading;
 using TypeaheadAIWin.Source;
 using MahApps.Metro.Controls;
 using TypeaheadAIWin.Source.Accessibility;
-using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.Model;
 using CursorType = TypeaheadAIWin.Source.Model.CursorType;
 using TypeaheadAIWin.Source.ViewModel;
@@ -43,10 +42,7 @@ namespace TypeaheadAIWin
 
         public MainWindow(
             ChatWindowViewModel viewModel,
-            Supabase.Client supabaseClient,
             AXInspector axInspector,
-            ISpeechSynthesizerWrapper speechSynthesizerWrapper,
-            StreamingSpeechProcessor speechProcessor,
             UserDefaults userDefaults
         ) {
             InitializeComponent();
@@ -64,9 +60,13 @@ namespace TypeaheadAIWin
         {
             _viewModel.Cancel();
 
+            var messageId = Guid.NewGuid();
             var chatMessage = new ChatMessage
             {
+                Id = messageId,
                 Role = ChatMessageRole.User,
+                RootId = _viewModel.ChatMessages.Count > 0 ? _viewModel.ChatMessages[0].RootId : messageId,
+                InReplyToId = _viewModel.ChatMessages.Count > 0 ? _viewModel.ChatMessages[^1].Id : null
             };
 
             // Iterate through the blocks in the RichTextBox

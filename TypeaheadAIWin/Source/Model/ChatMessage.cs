@@ -14,6 +14,15 @@ namespace TypeaheadAIWin.Source.Model
     public partial class ChatMessage : ObservableObject
     {
         [ObservableProperty]
+        private Guid _id;
+
+        [ObservableProperty]
+        private Guid _rootId;
+        
+        [ObservableProperty]
+        private Guid? _inReplyToId;
+
+        [ObservableProperty]
         private string _text;
 
         [ObservableProperty]
@@ -26,8 +35,11 @@ namespace TypeaheadAIWin.Source.Model
         private ChatMessageRole _role;
 
         // Constructor
-        public ChatMessage()
+        public ChatMessage(Guid? rootId = null, Guid? inReplyToId = null)
         {
+            _id = Guid.NewGuid();
+            _rootId = rootId ?? _id;
+            _inReplyToId = inReplyToId;
             _text = string.Empty;
         }
     }

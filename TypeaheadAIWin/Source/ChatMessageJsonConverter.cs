@@ -24,6 +24,14 @@ namespace TypeaheadAIWin.Source
         public override void Write(Utf8JsonWriter writer, ChatMessage value, JsonSerializerOptions options)
         {
             writer.WriteStartObject();
+            writer.WriteString("id", value.Id.ToString());
+            writer.WriteString("rootId", value.RootId.ToString());
+
+            if (value.InReplyToId != null)
+            {
+                writer.WriteString("inReplyToId", value.InReplyToId.ToString());
+            }
+
             writer.WriteBoolean("isCurrentUser", value.Role == ChatMessageRole.User);
             writer.WriteString("text", value.Text);
 

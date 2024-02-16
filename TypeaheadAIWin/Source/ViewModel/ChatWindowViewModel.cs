@@ -108,10 +108,13 @@ namespace TypeaheadAIWin.Source.ViewModel
                 else
                 {
                     // If the last message is not an assistant message, create a new one
+                    var messageId = Guid.NewGuid();
                     var chatMessage = new ChatMessage
                     {
                         Role = ChatMessageRole.Assistant,
                         Text = response.Text,
+                        RootId = ChatMessages.Count > 0 ? ChatMessages[0].RootId : messageId,
+                        InReplyToId = ChatMessages.Count > 0 ? ChatMessages[^1].Id : null
                     };
                     ChatMessages.Add(chatMessage);
                 }
