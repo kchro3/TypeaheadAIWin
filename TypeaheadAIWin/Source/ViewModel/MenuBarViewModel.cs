@@ -7,9 +7,9 @@ namespace TypeaheadAIWin.Source.ViewModel
 {
     public partial class MenuBarViewModel: ObservableObject
     {
-        private readonly ChatWindowViewModel _chatWindowViewModel;
+        private readonly ChatPageViewModel _chatWindowViewModel;
 
-        public MenuBarViewModel(ChatWindowViewModel chatWindowViewModel) {
+        public MenuBarViewModel(ChatPageViewModel chatWindowViewModel) {
             _chatWindowViewModel = chatWindowViewModel;
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using System.Media;
 using System.Net.Http;
 using System.Windows;
@@ -47,8 +48,16 @@ namespace TypeaheadAIWin
         private void ConfigureServices(ServiceCollection services)
         {
             // Bind views
-            services.AddSingleton<MainWindow>();
-            services.AddSingleton<LoginWindow>();
+            services.AddSingleton(provider => new MainWindow
+            {
+                DataContext = provider.GetRequiredService<MainWindowViewModel>()
+            });
+            services.AddSingleton<MainWindowViewModel>();
+            services.AddSingleton<ChatPageViewModel>();
+            services.AddSingleton<LoginPageViewModel>();
+
+            // View Model factory
+            services.AddSingleton<Func<Type, ObservableObject>>(provider => viewModelType => (ObservableObject)provider.GetRequiredService(viewModelType));
             services.AddSingleton<MenuBar>();
 
             // Synchronously initialize Supabase client
@@ -66,17 +75,15 @@ namespace TypeaheadAIWin
             services.AddSingleton<AXInspector>();
             services.AddSingleton<CursorSettingsViewModel>();
             services.AddSingleton<ChatService>();
-            services.AddSingleton<ChatWindowViewModel>();
             services.AddSingleton(httpClient);
             services.AddSingleton<MenuBarViewModel>();
+            services.AddSingleton<INavigationService, NavigationService>();
+            services.AddSingleton<ISpeechSynthesizerWrapper, SpeechSynthesizerWrapper>();
             services.AddSingleton(soundPlayer);
             services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);
             services.AddSingleton<UserDefaults>();
-
-            // Bind scoped
-            services.AddScoped<ISpeechSynthesizerWrapper, SpeechSynthesizerWrapper>();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
@@ -90,42 +97,7 @@ namespace TypeaheadAIWin
 
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-
-            // Check if the user is already signed in.
-            var supabaseClient = _serviceProvider.GetRequiredService<Supabase.Client>();
-            var session = await supabaseClient.Auth.RetrieveSessionAsync();
-
-            if (session == null)
-            {
-                try
-                {
-                    var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
-                    var result = loginWindow.ShowDialog();
-
-                    if (result.HasValue && result.Value)
-                    {
-                        loginWindow.Close();
-                        OpenMainWindow();
-                    }
-                    else
-                    {
-                        // Optionally, provide feedback before shutting down
-                        MessageBox.Show("Login failed or was cancelled. The application will now close.", "Login Failed", MessageBoxButton.OK, MessageBoxImage.Information);
-                        this.Shutdown();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log the exception or show an error message
-                    MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    this.Shutdown();
-                }
-            }
-            else
-            {
-                OpenMainWindow();
-            }
+            OpenMainWindow();
         }
 
         private void OpenMainWindow()

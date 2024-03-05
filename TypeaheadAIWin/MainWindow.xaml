@@ -10,65 +10,7 @@
                  AutomationProperties.Name="Type Ahead AI"
                  Height="450" Width="800"
                  ShowTitleBar="False" ShowSystemMenuOnRightClick="False">
-    
-    <Window.Resources>
-        <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter" />
-        <local:ChatMessageRoleToNameConverter x:Key="ChatMessageRoleToNameConverter"/>
-        <local:ChatMessageToMarkdownConverter x:Key="ChatMessageToMarkdownConverter"/>
-    </Window.Resources>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" Content="{Binding NavigationService.CurrentView}" />
 
-        <views:MenuBar />
-
-        <!-- ListView for Chat Messages -->
-        <ListView x:Name="ChatHistoryListView" Grid.Row="1" VirtualizingPanel.ScrollUnit="Pixel"
-                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                  AutomationProperties.LiveSetting="Polite"
-                  AlternationCount="3" >
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel>
-                        <TextBlock Text="{Binding Role, Converter={StaticResource ChatMessageRoleToNameConverter}}" 
-                                   FontWeight="Bold"
-                                   Margin="0,0,0,5"/>
-                        <Image Source="{Binding Image}" Visibility="{Binding Image, Converter={StaticResource NullToVisibilityConverter}}"
-                               Stretch="None" />
-                        <FlowDocumentScrollViewer Document="{Binding Text, Converter={StaticResource ChatMessageToMarkdownConverter}}" VerticalScrollBarVisibility="Disabled"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Style.Triggers>
-                        <!-- Trigger for Assistant role -->
-                        <DataTrigger Binding="{Binding Role}" Value="Assistant">
-                            <Setter Property="Background" Value="LightBlue" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </ListView.ItemContainerStyle>
-        </ListView>
-
-        <!-- Input Area -->
-        <DockPanel Grid.Row="2" LastChildFill="True">
-            <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" Click="SendButton_Click"/>
-            <RichTextBox x:Name="MessageInput"
-                MaxHeight="200"
-                Margin="5"
-                AcceptsReturn="True"
-                PreviewKeyDown="MessageInput_PreviewKeyDown">
-                <RichTextBox.Resources>
-                    <Style TargetType="ScrollViewer">
-                        <Setter Property="CanContentScroll" Value="True"/>
-                    </Style>
-                </RichTextBox.Resources>
-            </RichTextBox>
-        </DockPanel>
-    </Grid>
 </mah:MetroWindow>
