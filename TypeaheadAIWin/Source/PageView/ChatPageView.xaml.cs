@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using TypeaheadAIWin.Source.ViewModel;
 
 namespace TypeaheadAIWin.Source.PageView
 {
@@ -30,8 +31,8 @@ namespace TypeaheadAIWin.Source.PageView
         {
             if (e.Key == Key.Enter && Keyboard.Modifiers != ModifierKeys.Shift)
             {
-                e.Handled = true; // Prevent the enter key from being further processed
-                Trace.WriteLine("Worry about this later");
+                e.Handled = true;
+                ((ChatPageViewModel)this.DataContext).Send(MessageInput);
             }
         }
     }

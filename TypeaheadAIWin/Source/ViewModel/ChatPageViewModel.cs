@@ -6,7 +6,9 @@ using System.Media;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Components;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.Service;
 using TypeaheadAIWin.Source.Speech;
@@ -42,7 +44,7 @@ namespace TypeaheadAIWin.Source.ViewModel
         }
 
         [RelayCommand]
-        private void Send(object parameter)
+        public void Send(object parameter)
         {
             Cancel();
 
