@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Threading.Tasks;
+using System.Net.Http.Headers;
 
 namespace TypeaheadAIWin.Source
 {
@@ -16,6 +12,7 @@ namespace TypeaheadAIWin.Source
             this HttpClient client,
             string uri,
             object requestModel,
+            String authorizationToken,
             JsonSerializerOptions? options = null,
             CancellationToken cancellationToken = default)
         {
@@ -29,7 +26,7 @@ namespace TypeaheadAIWin.Source
 
             var content = JsonContent.Create(requestModel, null, options);
 
-            using var request = CreatePostEventStreamRequest(uri, content);
+            using var request = CreatePostEventStreamRequest(uri, authorizationToken, content);
 
             try
             {
@@ -37,17 +34,18 @@ namespace TypeaheadAIWin.Source
             }
             catch (PlatformNotSupportedException)
             {
-                using var newRequest = CreatePostEventStreamRequest(uri, content);
+                using var newRequest = CreatePostEventStreamRequest(uri, authorizationToken, content);
                 var responseTask = client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
                 var response = responseTask.GetAwaiter().GetResult();
                 return response;
             }
         }
 
-        private static HttpRequestMessage CreatePostEventStreamRequest(string uri, HttpContent content)
+        private static HttpRequestMessage CreatePostEventStreamRequest(string uri, string authorizationToken, HttpContent content)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, uri);
             request.Headers.Accept.Add(new("text/event-stream"));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authorizationToken);
             request.Content = content;
 
             return request;

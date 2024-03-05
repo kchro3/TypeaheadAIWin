@@ -54,7 +54,22 @@ namespace TypeaheadAIWin.Source.ViewModel
 
             Task.Run(async () =>
             {
-                await _chatService.StreamChatAsync(requestData, cancellationToken.Token);
+                try
+                {
+                    await _chatService.StreamChatAsync(requestData, cancellationToken.Token);
+                }
+                catch (Exception ex)
+                {
+                    // Stop any ongoing sound playback
+                    _soundPlayer.Stop();
+
+                    // Execute on UI thread since MessageBox.Show must be called on the UI thread
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        // Show error dialog
+                        MessageBox.Show(Application.Current.MainWindow, $"Failed to send message: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    });
+                }
             });
         }
 
@@ -62,7 +77,6 @@ namespace TypeaheadAIWin.Source.ViewModel
         {
             ChatMessages.Clear();
         }
-
 
         public void Cancel()
         {

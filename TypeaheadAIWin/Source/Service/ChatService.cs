@@ -8,12 +8,14 @@ namespace TypeaheadAIWin.Source.Service
     public class ChatService
     {
         private readonly HttpClient _httpClient;
+        private readonly Supabase.Client _supabaseClient;
         private readonly JsonSerializerOptions _serializerOptions;
 
         public event EventHandler<ChatResponse> OnChatResponseReceived;
 
-        public ChatService(HttpClient httpClient) {
+        public ChatService(HttpClient httpClient, Supabase.Client supabaseClient) {
             _httpClient = httpClient;
+            _supabaseClient = supabaseClient;
 
             _serializerOptions = new JsonSerializerOptions
             {
@@ -26,9 +28,11 @@ namespace TypeaheadAIWin.Source.Service
 
         public async Task StreamChatAsync(ChatRequest chatRequest, CancellationToken cancellationToken)
         {
+            var authorizationToken = _supabaseClient.Auth.CurrentSession?.AccessToken ?? throw new InvalidOperationException("User is not authenticated");
             using var response = _httpClient.PostAsStreamAsync(
                 AppConfig.GetApiBaseUrl() + "/v5/wstream",
                 chatRequest,
+                authorizationToken,
                 _serializerOptions,
                 cancellationToken
             );

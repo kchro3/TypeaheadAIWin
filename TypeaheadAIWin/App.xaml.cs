@@ -9,6 +9,7 @@ using TypeaheadAIWin.Source.Service;
 using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.ViewModel;
 using TypeaheadAIWin.Source.Views;
+using Forms = System.Windows.Forms;
 
 namespace TypeaheadAIWin
 {
@@ -31,11 +32,16 @@ namespace TypeaheadAIWin
             }
         }
 
+        private readonly Forms.NotifyIcon _notifyIcon;
+        private MainWindow _mainWindow;
+
         public App()
         {
             ServiceCollection services = new ServiceCollection();
             ConfigureServices(services);
             _serviceProvider = services.BuildServiceProvider();
+
+            _notifyIcon = new Forms.NotifyIcon();
         }
 
         private void ConfigureServices(ServiceCollection services)
@@ -52,12 +58,16 @@ namespace TypeaheadAIWin
             var soundPlayer = new SoundPlayer(TypeaheadAIWin.Properties.Resources.snap);
             soundPlayer.Load();
 
+            // Initalize the HTTP Client
+            var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(10);
+
             // Bind singletons
             services.AddSingleton<AXInspector>();
             services.AddSingleton<CursorSettingsViewModel>();
             services.AddSingleton<ChatService>();
             services.AddSingleton<ChatWindowViewModel>();
-            services.AddSingleton<HttpClient>();
+            services.AddSingleton(httpClient);
             services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton(soundPlayer);
             services.AddSingleton<SpeechSettingsViewModel>();
@@ -72,10 +82,15 @@ namespace TypeaheadAIWin
         protected override async void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-            
-            this.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
-            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+            _notifyIcon.Icon = new System.Drawing.Icon("Resources/typeahead.ico");
+            _notifyIcon.Text = "Typeahead AI";
+            _notifyIcon.Visible = true;
+            _notifyIcon.Click += NotifyIcon_Click;
+
+            this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+            _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
 
             // Check if the user is already signed in.
             var supabaseClient = _serviceProvider.GetRequiredService<Supabase.Client>();
@@ -91,7 +106,7 @@ namespace TypeaheadAIWin
                     if (result.HasValue && result.Value)
                     {
                         loginWindow.Close();
-                        mainWindow.Show();
+                        OpenMainWindow();
                     }
                     else
                     {
@@ -109,8 +124,31 @@ namespace TypeaheadAIWin
             }
             else
             {
-                mainWindow.Show();
+                OpenMainWindow();
             }
+        }
+
+        private void OpenMainWindow()
+        {
+            if (_mainWindow == null || !_mainWindow.IsLoaded)
+            {
+                _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+
+                // Subscribe to the Closing event to prevent actual close
+                _mainWindow.Closing += (sender, args) =>
+                {
+                    args.Cancel = true; // Cancel the close operation
+                    _mainWindow.Hide(); // Hide the window instead
+                };
+            }
+
+            if (!_mainWindow.IsVisible)
+            {
+                _mainWindow.Show();
+            }
+
+            _mainWindow.WindowState = WindowState.Normal;
+            _mainWindow.Activate();
         }
 
         private async Task<Supabase.Client> CreateSupabaseClientAsync()
@@ -129,6 +167,17 @@ namespace TypeaheadAIWin
             supabase.Auth.LoadSession();
             await supabase.InitializeAsync();
             return supabase;
+        }
+
+        private void NotifyIcon_Click(object sender, EventArgs e)
+        {
+            OpenMainWindow();
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            base.OnExit(e);
+            _notifyIcon.Dispose();
         }
     }
 }
