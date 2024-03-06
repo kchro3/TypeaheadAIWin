@@ -1,37 +1,26 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Windows;
-using TypeaheadAIWin.Source.Views;
+using TypeaheadAIWin.Source.Service;
 
 namespace TypeaheadAIWin.Source.ViewModel
 {
     public partial class MenuBarViewModel: ObservableObject
     {
+        private readonly INavigationService _navigationService;
         private readonly ChatPageViewModel _chatWindowViewModel;
 
-        public MenuBarViewModel(ChatPageViewModel chatWindowViewModel) {
+        public MenuBarViewModel(
+            ChatPageViewModel chatWindowViewModel,
+            INavigationService navigationService) {
             _chatWindowViewModel = chatWindowViewModel;
+            _navigationService = navigationService;
         }
 
         [RelayCommand]
         private void New()
         {
-            _chatWindowViewModel.Cancel();
             _chatWindowViewModel.Clear();
-        }
-
-        [RelayCommand]
-        private void Open()
-        {
-            // Implement the action for the Open command
-            MessageBox.Show("Not implemented yet.");
-        }
-
-        [RelayCommand]
-        private void Save()
-        {
-            // Implement the action for the Save command
-            MessageBox.Show("Not implemented yet.");
         }
 
         [RelayCommand]
@@ -42,17 +31,15 @@ namespace TypeaheadAIWin.Source.ViewModel
         }
 
         [RelayCommand]
-        private void Cursor()
+        private void General()
         {
-            var cursorSettingsWindow = new CursorSettingsWindow();
-            cursorSettingsWindow.ShowDialog();
+            _navigationService.NavigateTo<SettingsPageViewModel>();
         }
 
         [RelayCommand]
-        private void Speech()
+        private void Account()
         {
-            var speechSettingsWindow = new SpeechSettingsWindow();
-            speechSettingsWindow.ShowDialog();
+            _navigationService.NavigateTo<AccountPageViewModel>();
         }
 
         [RelayCommand]

@@ -16,14 +16,12 @@
         <Menu Grid.Row="0" VerticalAlignment="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Command="{Binding NewCommand}"/>
-                <MenuItem Header="_Open" Command="{Binding OpenCommand}"/>
-                <MenuItem Header="_Save" Command="{Binding SaveCommand}"/>
                 <Separator/>
                 <MenuItem Header="E_xit" Command="{Binding ExitCommand}"/>
             </MenuItem>
             <MenuItem Header="_Settings">
-                <MenuItem Header="_Cursor" Command="{Binding CursorCommand}"/>
-                <MenuItem Header="_Speech" Command="{Binding SpeechCommand}"/>
+                <MenuItem Header="_General" Command="{Binding GeneralCommand}"/>
+                <MenuItem Header="_Account" Command="{Binding AccountCommand}"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About" Command="{Binding AboutCommand}"/>

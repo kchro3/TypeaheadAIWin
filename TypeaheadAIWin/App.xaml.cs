@@ -56,9 +56,11 @@ namespace TypeaheadAIWin
                 DataContext = provider.GetRequiredService<MainWindowViewModel>()
             });
             services.AddSingleton<MainWindowViewModel>();
+            services.AddSingleton<AccountPageViewModel>();
             services.AddSingleton<ChatPageViewModel>();
             services.AddSingleton<LoginPageViewModel>();
-            
+            services.AddSingleton<SettingsPageViewModel>();
+
             // View Model factory
             services.AddSingleton<Func<Type, ObservableObject>>(provider => viewModelType => (ObservableObject)provider.GetRequiredService(viewModelType));
             services.AddSingleton<MenuBar>();
@@ -76,7 +78,6 @@ namespace TypeaheadAIWin
 
             // Bind singletons
             services.AddSingleton<AXInspector>();
-            services.AddSingleton<CursorSettingsViewModel>();
             services.AddSingleton<ChatService>();
             services.AddSingleton(httpClient);
             services.AddSingleton<MenuBarViewModel>();
@@ -84,7 +85,6 @@ namespace TypeaheadAIWin
             services.AddSingleton<Screenshotter>();
             services.AddSingleton<ISpeechSynthesizerWrapper, SpeechSynthesizerWrapper>();
             services.AddSingleton(soundPlayer);
-            services.AddSingleton<SpeechSettingsViewModel>();
             services.AddSingleton<StreamingSpeechProcessor>();
             services.AddSingleton(supabaseClient);
             services.AddSingleton<UserDefaults>();
@@ -103,8 +103,6 @@ namespace TypeaheadAIWin
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             mainWindow.OpenWindow();
-
-            Trace.WriteLine("Opened main window");
         }
 
         private async Task<Supabase.Client> CreateSupabaseClientAsync()

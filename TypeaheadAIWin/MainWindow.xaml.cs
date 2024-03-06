@@ -3,7 +3,7 @@ using MahApps.Metro.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Windows;
-using TypeaheadAIWin.Source.PageView;
+using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.ViewModel;
 using Application = System.Windows.Application;
 
@@ -14,10 +14,13 @@ namespace TypeaheadAIWin
     /// </summary>
     public partial class MainWindow : MetroWindow
     {
+        private readonly UserDefaults _userDefaults;
         private LowLevelKeyboardHook _lowLevelKeyboardHook;
 
         public MainWindow() {
             InitializeComponent();
+
+            _userDefaults = App.ServiceProvider.GetRequiredService<UserDefaults>();
 
             // Subscribe to the Closing event to prevent actual close
             this.Closing += (sender, args) =>
@@ -59,13 +62,17 @@ namespace TypeaheadAIWin
         private void LowLevelKeyboardHook_Up(object? sender, KeyboardEventArgs e)
         {
             // Activate Window hotkey
-            if (e.Keys.Are(Key.Shift, Key.LeftWindows, Key.Space))
+            if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                (e.Keys.Are(Key.Shift, Key.Insert, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                (e.Keys.Are(Key.Shift, Key.CapsLock, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
             {
                 e.IsHandled = true;
                 Application.Current.Dispatcher.Invoke(() => Toggle());
             }
             // New Window hotkey
-            else if (e.Keys.Are(Key.Shift, Key.LeftWindows, Key.N))
+            else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                     (e.Keys.Are(Key.Shift, Key.Insert, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                     (e.Keys.Are(Key.Shift, Key.CapsLock, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
             {
                 e.IsHandled = true;
                 Application.Current.Dispatcher.Invoke(() => 
@@ -80,7 +87,9 @@ namespace TypeaheadAIWin
                 });
             }
             // Screenshot Window hotkey
-            else if (e.Keys.Are(Key.Shift, Key.LeftWindows, Key.I))
+            else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                     (e.Keys.Are(Key.Shift, Key.Insert, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                     (e.Keys.Are(Key.Shift, Key.CapsLock, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
             {
                 e.IsHandled = true;
                 Application.Current.Dispatcher.Invoke(() =>

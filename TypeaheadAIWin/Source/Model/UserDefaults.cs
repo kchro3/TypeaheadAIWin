@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Speech.Synthesis;
-using System.Windows.Input;
 
 namespace TypeaheadAIWin.Source.Model
 {
@@ -12,10 +11,14 @@ namespace TypeaheadAIWin.Source.Model
         [ObservableProperty]
         private CursorType _cursorType;
 
+        [ObservableProperty]
+        private TypeaheadKey _typeaheadKey;
+
         public UserDefaults()
         {
             PromptRate = (PromptRate)Properties.Settings.Default.PromptRate;
             CursorType = (CursorType)Properties.Settings.Default.CursorType;
+            TypeaheadKey = (TypeaheadKey)Properties.Settings.Default.TypeaheadKey;
         }
 
         partial void OnPromptRateChanged(PromptRate value)
@@ -27,6 +30,12 @@ namespace TypeaheadAIWin.Source.Model
         partial void OnCursorTypeChanged(CursorType value)
         {
             Properties.Settings.Default.CursorType = (int)value;
+            Properties.Settings.Default.Save();
+        }
+
+        partial void OnTypeaheadKeyChanged(TypeaheadKey value)
+        {
+            Properties.Settings.Default.TypeaheadKey = (int)value;
             Properties.Settings.Default.Save();
         }
     }

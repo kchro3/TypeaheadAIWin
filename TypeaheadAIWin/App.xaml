@@ -12,12 +12,20 @@
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
+            <DataTemplate DataType="{x:Type vm:AccountPageViewModel}">
+                <view:AccountPageView />
+            </DataTemplate>
+
             <DataTemplate DataType="{x:Type vm:ChatPageViewModel}">
                 <view:ChatPageView />
             </DataTemplate>
-            
+
             <DataTemplate DataType="{x:Type vm:LoginPageViewModel}">
                 <view:LoginPageView />
+            </DataTemplate>
+
+            <DataTemplate DataType="{x:Type vm:SettingsPageViewModel}">
+                <view:SettingsPageView />
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
