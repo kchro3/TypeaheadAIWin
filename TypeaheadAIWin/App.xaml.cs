@@ -1,11 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using H.Hooks;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics;
 using System.Media;
 using System.Net.Http;
 using System.Windows;
 using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Components;
 using TypeaheadAIWin.Source.Model;
+using TypeaheadAIWin.Source.PageView;
 using TypeaheadAIWin.Source.Service;
 using TypeaheadAIWin.Source.Speech;
 using TypeaheadAIWin.Source.ViewModel;
@@ -34,7 +38,6 @@ namespace TypeaheadAIWin
         }
 
         private readonly Forms.NotifyIcon _notifyIcon;
-        private MainWindow _mainWindow;
 
         public App()
         {
@@ -55,7 +58,7 @@ namespace TypeaheadAIWin
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<ChatPageViewModel>();
             services.AddSingleton<LoginPageViewModel>();
-
+            
             // View Model factory
             services.AddSingleton<Func<Type, ObservableObject>>(provider => viewModelType => (ObservableObject)provider.GetRequiredService(viewModelType));
             services.AddSingleton<MenuBar>();
@@ -78,6 +81,7 @@ namespace TypeaheadAIWin
             services.AddSingleton(httpClient);
             services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton<INavigationService, NavigationService>();
+            services.AddSingleton<Screenshotter>();
             services.AddSingleton<ISpeechSynthesizerWrapper, SpeechSynthesizerWrapper>();
             services.AddSingleton(soundPlayer);
             services.AddSingleton<SpeechSettingsViewModel>();
@@ -97,30 +101,10 @@ namespace TypeaheadAIWin
 
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-            OpenMainWindow();
-        }
+            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+            mainWindow.OpenWindow();
 
-        private void OpenMainWindow()
-        {
-            if (_mainWindow == null || !_mainWindow.IsLoaded)
-            {
-                _mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-
-                // Subscribe to the Closing event to prevent actual close
-                _mainWindow.Closing += (sender, args) =>
-                {
-                    args.Cancel = true; // Cancel the close operation
-                    _mainWindow.Hide(); // Hide the window instead
-                };
-            }
-
-            if (!_mainWindow.IsVisible)
-            {
-                _mainWindow.Show();
-            }
-
-            _mainWindow.WindowState = WindowState.Normal;
-            _mainWindow.Activate();
+            Trace.WriteLine("Opened main window");
         }
 
         private async Task<Supabase.Client> CreateSupabaseClientAsync()
@@ -143,7 +127,7 @@ namespace TypeaheadAIWin
 
         private void NotifyIcon_Click(object sender, EventArgs e)
         {
-            OpenMainWindow();
+            _serviceProvider.GetRequiredService<MainWindow>().OpenWindow();
         }
 
         protected override void OnExit(ExitEventArgs e)

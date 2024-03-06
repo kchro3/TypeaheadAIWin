@@ -6,9 +6,8 @@ using System.Media;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Input;
+using System.Windows.Media;
 using TypeaheadAIWin.Source.Accessibility;
-using TypeaheadAIWin.Source.Components;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.Service;
 using TypeaheadAIWin.Source.Speech;
@@ -26,6 +25,9 @@ namespace TypeaheadAIWin.Source.ViewModel
         private CancellationTokenSource? cancellationToken;
 
         public ObservableCollection<ChatMessage> ChatMessages { get; } = new();
+
+        // Fires an event with the screenshot
+        public event EventHandler<ImageSource> OnScreenshotTaken;
 
         public ChatPageViewModel(
             AXInspector axInspector,
@@ -141,6 +143,7 @@ namespace TypeaheadAIWin.Source.ViewModel
 
         public void Clear()
         {
+            Cancel();
             ChatMessages.Clear();
         }
 
@@ -152,6 +155,16 @@ namespace TypeaheadAIWin.Source.ViewModel
 
             _speechProcessor.Cancel();
             _soundPlayer.Stop();
+        }
+
+        public void TakeScreenshot()
+        {
+            var screenshot = _axInspector.TakeScreenshot();
+            if (screenshot != null)
+            {
+                // Kind of silly, but I need to get access to the MessageInput from the view, which is tricky.
+                OnScreenshotTaken?.Invoke(this, screenshot);
+            }
         }
 
         // Handle the chat response

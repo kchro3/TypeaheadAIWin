@@ -54,19 +54,27 @@
             </ListView.ItemContainerStyle>
         </ListView>
 
-        <DockPanel Grid.Row="2" LastChildFill="True">
-            <Button x:Name="SendButton" Content="Send" DockPanel.Dock="Right" Width="100" Margin="5" Command="{Binding SendCommand}" CommandParameter="{Binding ElementName=MessageInput}"/>
+        <!-- Input Area with Grid to allow TextBox expansion -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
             <RichTextBox x:Name="MessageInput"
-                MaxHeight="200"
-                Margin="5"
-                AcceptsReturn="True"
-                PreviewKeyDown="MessageInput_PreviewKeyDown">
+                         MaxHeight="200"
+                         Margin="5"
+                         AcceptsReturn="True"
+                         PreviewKeyDown="MessageInput_PreviewKeyDown">
                 <RichTextBox.Resources>
                     <Style TargetType="ScrollViewer">
                         <Setter Property="CanContentScroll" Value="True"/>
                     </Style>
                 </RichTextBox.Resources>
             </RichTextBox>
-        </DockPanel>
+
+            <Button x:Name="SendButton" Content="Send" Margin="5" Grid.Column="1" 
+                    Command="{Binding SendCommand}" CommandParameter="{Binding ElementName=MessageInput}"/>
+        </Grid>
     </Grid>
 </Page>

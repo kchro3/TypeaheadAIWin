@@ -2,6 +2,8 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Media;
+using TypeaheadAIWin.Source.Components;
 using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source.Accessibility
@@ -25,11 +27,34 @@ namespace TypeaheadAIWin.Source.Accessibility
             public int Y;
         }
 
+        private readonly Screenshotter _screenshotter;
+        private readonly UserDefaults _userDefaults;
         private AutomationElement focusedElement;
 
-        public AXInspector() {
+        public AXInspector(
+            Screenshotter screenshotter,
+            UserDefaults userDefaults) 
+        {
+            _screenshotter = screenshotter;
+            _userDefaults = userDefaults;
+
             focusedElement = AutomationElement.FocusedElement;
             Subscribe();
+        }
+
+        public ImageSource? TakeScreenshot()
+        {
+            // Window is not visible, take a screenshot and open the window
+            var currentElement = _userDefaults.CursorType switch
+            {
+                CursorType.ScreenReader => GetFocusedElement(),
+                _ => GetElementUnderCursor()
+            };
+
+            var bounds = currentElement.Current.BoundingRectangle;
+            var screenshot = _screenshotter.CaptureArea((int)bounds.X, (int)bounds.Y, (int)bounds.Width, (int)bounds.Height);
+            var imageSource = _screenshotter.ConvertBitmapToImageSource(screenshot);
+            return imageSource;
         }
 
         public AutomationElement GetElementUnderCursor()
