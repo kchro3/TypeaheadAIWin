@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Windows;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.ViewModel;
+using Wpf.Ui.Controls;
 using Application = System.Windows.Application;
 
 namespace TypeaheadAIWin
@@ -12,7 +13,7 @@ namespace TypeaheadAIWin
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : MetroWindow
+    public partial class MainWindow : FluentWindow
     {
         private readonly UserDefaults _userDefaults;
         private LowLevelKeyboardHook _lowLevelKeyboardHook;

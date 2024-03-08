@@ -19,11 +19,13 @@
     <PackageReference Include="H.Hooks" Version="1.6.0" />
     <PackageReference Include="MahApps.Metro" Version="2.4.10" />
     <PackageReference Include="MdXaml" Version="1.27.0" />
+    <PackageReference Include="Mekumiao.WPF-UI.Tray" Version="3.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />
     <PackageReference Include="Moq" Version="4.20.70" />
     <PackageReference Include="supabase-csharp" Version="0.15.0" />
     <PackageReference Include="System.Speech" Version="8.0.0" />
+    <PackageReference Include="WPF-UI" Version="3.0.0" />
   </ItemGroup>
 	
   <ItemGroup>
