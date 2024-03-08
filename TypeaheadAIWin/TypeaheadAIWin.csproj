@@ -14,6 +14,7 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <PackageReference Include="Blend.Interctivity.WPF.v4.0" Version="1.0.3" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <PackageReference Include="H.Hooks" Version="1.6.0" />
     <PackageReference Include="MahApps.Metro" Version="2.4.10" />
