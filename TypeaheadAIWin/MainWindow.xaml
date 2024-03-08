@@ -4,7 +4,9 @@
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-                 xmlns:local="clr-namespace:TypeaheadAIWin.Source" xmlns:views="clr-namespace:TypeaheadAIWin.Source.Views"
+                 xmlns:local="clr-namespace:TypeaheadAIWin.Source" xmlns:views="clr-namespace:TypeaheadAIWin.Source.Views" 
+                 xmlns:i="http://schemas.microsoft.com/xaml/behaviors" 
+                 xmlns:components="clr-namespace:TypeaheadAIWin.Source.Components"
                  mc:Ignorable="d"
                  Title="Typeahead AI"
                  AutomationProperties.Name="Type Ahead AI"
@@ -12,5 +14,9 @@
                  ShowTitleBar="False" ShowSystemMenuOnRightClick="False">
 
     <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden" Content="{Binding NavigationService.CurrentView}" />
+
+    <i:Interaction.Behaviors>
+        <components:ActivateBehavior Activated="{Binding Activated, Mode=TwoWay}"/>
+    </i:Interaction.Behaviors>
 
 </mah:MetroWindow>

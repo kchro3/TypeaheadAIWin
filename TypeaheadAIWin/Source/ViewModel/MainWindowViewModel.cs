@@ -15,6 +15,9 @@ namespace TypeaheadAIWin.Source.ViewModel
         private readonly Supabase.Client _supabaseClient;
 
         [ObservableProperty]
+        private bool _activated;
+
+        [ObservableProperty]
         private INavigationService _navigationService;
 
         public MainWindowViewModel(

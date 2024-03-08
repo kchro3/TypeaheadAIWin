@@ -80,6 +80,7 @@ namespace TypeaheadAIWin
             services.AddSingleton<AXInspector>();
             services.AddSingleton<ChatService>();
             services.AddSingleton(httpClient);
+            services.AddSingleton<HttpAuthServer>();
             services.AddSingleton<MenuBarViewModel>();
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<Screenshotter>();

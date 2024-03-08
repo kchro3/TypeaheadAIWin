@@ -16,15 +16,19 @@
         </Grid.RowDefinitions>
 
         <!-- Image Banner -->
-        <Image Grid.Row="0" Source="Resources/typeahead_white.png" Width="300" Margin="5,30"/>
+        <Image Grid.Row="1" Source="Resources/typeahead_white.png" Width="300" Margin="240,58,240,312"/>
 
         <!-- Login Form -->
-        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,32">
             <TextBox x:Name="EmailTextBox" Width="300" Margin="5" mah:TextBoxHelper.Watermark="Email"
                      Text="{Binding Email}"/>
             <PasswordBox x:Name="PasswordBox" Width="300" Margin="5" mah:TextBoxHelper.Watermark="Password"/>
             <Button x:Name="SignInButton" Content="Sign In" Width="300" Margin="5" 
                     Command="{Binding SignInCommand}" CommandParameter="{Binding ElementName=PasswordBox}"/>
+            <Button x:Name="SignInWithAppleButton" Content="Sign In with Apple" Width="300" Margin="5" 
+                    Command="{Binding SignInWithAppleCommand}"/>
+            <Button x:Name="SignInWithGoogleButton" Content="Sign In with Google" Width="300" Margin="5" 
+                    Command="{Binding SignInWithGoogleCommand}"/>
             <Button x:Name="RegisterButton" Content="Register New Account" Width="300" Margin="5" 
                     Command="{Binding RegisterCommand}" CommandParameter="{Binding ElementName=PasswordBox}"/>
         </StackPanel>
