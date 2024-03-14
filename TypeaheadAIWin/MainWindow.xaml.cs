@@ -3,6 +3,8 @@ using MahApps.Metro.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Automation;
+using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.ViewModel;
 using Application = System.Windows.Application;
@@ -67,7 +69,10 @@ namespace TypeaheadAIWin
                 (e.Keys.Are(Key.Shift, Key.CapsLock, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
             {
                 e.IsHandled = true;
-                Application.Current.Dispatcher.Invoke(() => Toggle());
+                Application.Current.Dispatcher.Invoke(() => {
+                    PrintAppState();
+                    Toggle();
+                });
             }
             // New Window hotkey
             else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
@@ -82,6 +87,7 @@ namespace TypeaheadAIWin
                     
                     if (!IsVisible)
                     {
+                        PrintAppState();
                         OpenWindow();
                     }
                 });
@@ -104,6 +110,64 @@ namespace TypeaheadAIWin
                     }
                 });
             }
+        }
+
+        private void PrintAppState()
+        {
+            var axInspector = App.ServiceProvider.GetRequiredService<AXInspector>();
+            var appContext = axInspector.GetCurrentAppContext();
+            var focusedElement = axInspector.GetFocusedElement();
+
+            AutomationElement rootWindow = GetRootWindow(focusedElement);
+            PrintTree(rootWindow, 0);
+        }
+
+        static void PrintTree(AutomationElement element, int level)
+        {
+            string indent = new string(' ', level * 2);
+
+            string name = element.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
+            if (string.IsNullOrEmpty(name))
+                return; // Skip unnamed elements to reduce clutter
+
+            string controlType = element.GetCurrentPropertyValue(AutomationElement.ControlTypeProperty) as ControlType;
+            string automationId = element.GetCurrentPropertyValue(AutomationElement.AutomationIdProperty) as string;
+
+            // Attempt to get the value pattern and its current value
+            object valuePatternObj = null;
+            string valuePattern = string.Empty;
+            if (element.TryGetCurrentPattern(ValuePattern.Pattern, out valuePatternObj))
+            {
+                ValuePattern valPattern = valuePatternObj as ValuePattern;
+                valuePattern = $"Value: {valPattern.Current.Value}";
+            }
+
+            Console.WriteLine($"{indent}Name: {name}, Automation ID: {automationId}, {valuePattern}");
+
+            TreeWalker walker = TreeWalker.ControlViewWalker;
+            AutomationElement child = walker.GetFirstChild(element);
+            while (child != null)
+            {
+                PrintTree(child, level + 1);
+                child = walker.GetNextSibling(child);
+            }
+        }
+
+        private static AutomationElement GetRootWindow(AutomationElement element)
+        {
+            // Traverse up the tree to find the root window
+            AutomationElement parent;
+            AutomationElement currentElement = element;
+            do
+            {
+                parent = TreeWalker.RawViewWalker.GetParent(currentElement);
+                if (parent == null)
+                {
+                    // Current element is the root
+                    return currentElement;
+                }
+                currentElement = parent;
+            } while (true);
         }
     }
 }
