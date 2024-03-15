@@ -33,6 +33,8 @@ namespace TypeaheadAIWin.Source.PageView
 
         private void ViewModel_OnScreenshotTaken(object? sender, ImageSource e)
         {
+            MessageInput.Document.Blocks.Clear();
+
             var newImage = new Image()
             {
                 Source = e,
