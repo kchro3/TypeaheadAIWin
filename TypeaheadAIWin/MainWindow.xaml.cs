@@ -34,8 +34,9 @@ namespace TypeaheadAIWin
 
             _lowLevelKeyboardHook = new LowLevelKeyboardHook();
             _lowLevelKeyboardHook.HandleModifierKeys = true;
-            _lowLevelKeyboardHook.Handling = true;
-            _lowLevelKeyboardHook.Up += LowLevelKeyboardHook_Up;
+            _lowLevelKeyboardHook.Handling = true; 
+            _lowLevelKeyboardHook.IsCapsLock = true;
+            _lowLevelKeyboardHook.Down += LowLevelKeyboardHook_Down;
             _lowLevelKeyboardHook.Start();
         }
 
@@ -61,7 +62,7 @@ namespace TypeaheadAIWin
             }
         }
 
-        private void LowLevelKeyboardHook_Up(object? sender, KeyboardEventArgs e)
+        private void LowLevelKeyboardHook_Down(object? sender, KeyboardEventArgs e)
         {
             // Activate Window hotkey
             if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
@@ -108,6 +109,15 @@ namespace TypeaheadAIWin
                     {
                         OpenWindow();
                     }
+                });
+            }
+            // Cancel speaking
+            else if (e.Keys.Are(Key.Shift, Key.Escape))
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var chatPageViewModel = App.ServiceProvider.GetRequiredService<ChatPageViewModel>();
+                    chatPageViewModel.Cancel();
                 });
             }
         }
