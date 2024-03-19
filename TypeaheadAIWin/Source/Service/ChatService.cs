@@ -2,6 +2,8 @@
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TypeaheadAIWin.Source.Components.Converters;
+using TypeaheadAIWin.Source.Model.Chat;
 
 namespace TypeaheadAIWin.Source.Service
 {
@@ -19,7 +21,10 @@ namespace TypeaheadAIWin.Source.Service
 
             _serializerOptions = new JsonSerializerOptions
             {
-                Converters = { new ChatMessageJsonConverter() },
+                Converters = { 
+                    new ChatMessageJsonConverter(),
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, true)
+                },
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
                 PropertyNameCaseInsensitive = true,
                 PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower

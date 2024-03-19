@@ -86,6 +86,7 @@ namespace TypeaheadAIWin
             services.AddSingleton<ChatService>();
 
             services.AddSingleton<FunctionCaller>();
+            services.AddSingleton<OpenUrlFunctionExecutor>();
 
             services.AddSingleton(httpClient);
             services.AddSingleton<HttpAuthServer>();

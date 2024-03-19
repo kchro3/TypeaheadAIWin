@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Automation;
 using System.Windows.Media;
+using TypeaheadAIWin.Source.Model.Functions;
 
 namespace TypeaheadAIWin.Source.Model
 {
@@ -29,7 +30,16 @@ namespace TypeaheadAIWin.Source.Model
         private ImageSource _image;
 
         [ObservableProperty]
+        private bool _isHidden = false;
+
+        [ObservableProperty]
         private AutomationElement _focusedElement;
+
+        [ObservableProperty]
+        private List<FunctionCall> _functionCalls;
+
+        [ObservableProperty]
+        private string _inReplyToFunctionCallId;
 
         [ObservableProperty]
         private ChatMessageRole _role;
