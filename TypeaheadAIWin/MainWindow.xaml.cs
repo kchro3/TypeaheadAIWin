@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Automation;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Components;
+using TypeaheadAIWin.Source.Components.Accessibility;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.ViewModel;
 using Application = System.Windows.Application;
@@ -37,6 +39,7 @@ namespace TypeaheadAIWin
             _lowLevelKeyboardHook.Handling = true; 
             _lowLevelKeyboardHook.IsCapsLock = true;
             _lowLevelKeyboardHook.Down += LowLevelKeyboardHook_Down;
+            _lowLevelKeyboardHook.Up += LowLevelKeyboardHook_Up;
             _lowLevelKeyboardHook.Start();
         }
 
@@ -71,7 +74,6 @@ namespace TypeaheadAIWin
             {
                 e.IsHandled = true;
                 Application.Current.Dispatcher.Invoke(() => {
-                    PrintAppState();
                     Toggle();
                 });
             }
@@ -88,7 +90,6 @@ namespace TypeaheadAIWin
                     
                     if (!IsVisible)
                     {
-                        PrintAppState();
                         OpenWindow();
                     }
                 });
@@ -112,7 +113,7 @@ namespace TypeaheadAIWin
                 });
             }
             // Cancel speaking
-            else if (e.Keys.Are(Key.Shift, Key.Escape))
+            else if (e.Keys.Are(Key.LeftWindows, Key.Escape))
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -122,62 +123,50 @@ namespace TypeaheadAIWin
             }
         }
 
-        private void PrintAppState()
+        private void LowLevelKeyboardHook_Up(object? sender, KeyboardEventArgs e)
         {
-            var axInspector = App.ServiceProvider.GetRequiredService<AXInspector>();
-            var appContext = axInspector.GetCurrentAppContext();
-            var focusedElement = axInspector.GetFocusedElement();
-
-            AutomationElement rootWindow = GetRootWindow(focusedElement);
-            PrintTree(rootWindow, 0);
-        }
-
-        static void PrintTree(AutomationElement element, int level)
-        {
-            string indent = new string(' ', level * 2);
-
-            string name = element.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
-            if (string.IsNullOrEmpty(name))
-                return; // Skip unnamed elements to reduce clutter
-
-            string controlType = element.GetCurrentPropertyValue(AutomationElement.ControlTypeProperty) as ControlType;
-            string automationId = element.GetCurrentPropertyValue(AutomationElement.AutomationIdProperty) as string;
-
-            // Attempt to get the value pattern and its current value
-            object valuePatternObj = null;
-            string valuePattern = string.Empty;
-            if (element.TryGetCurrentPattern(ValuePattern.Pattern, out valuePatternObj))
+            // Activate Window hotkey
+            if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                (e.Keys.Are(Key.Shift, Key.Insert, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                (e.Keys.Are(Key.Shift, Key.CapsLock, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
             {
-                ValuePattern valPattern = valuePatternObj as ValuePattern;
-                valuePattern = $"Value: {valPattern.Current.Value}";
+                e.IsHandled = true;
             }
-
-            Console.WriteLine($"{indent}Name: {name}, Automation ID: {automationId}, {valuePattern}");
-
-            TreeWalker walker = TreeWalker.ControlViewWalker;
-            AutomationElement child = walker.GetFirstChild(element);
-            while (child != null)
+            // New Window hotkey
+            else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                     (e.Keys.Are(Key.Shift, Key.Insert, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                     (e.Keys.Are(Key.Shift, Key.CapsLock, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
             {
-                PrintTree(child, level + 1);
-                child = walker.GetNextSibling(child);
+                e.IsHandled = true;
+            }
+            // Screenshot Window hotkey
+            else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                     (e.Keys.Are(Key.Shift, Key.Insert, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                     (e.Keys.Are(Key.Shift, Key.CapsLock, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
+            {
+                e.IsHandled = true;
             }
         }
 
+        /// <summary>
+        /// Keep in the back pocket for now.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns></returns>
         private static AutomationElement GetRootWindow(AutomationElement element)
         {
-            // Traverse up the tree to find the root window
-            AutomationElement parent;
-            AutomationElement currentElement = element;
-            do
+            while (true)
             {
-                parent = TreeWalker.RawViewWalker.GetParent(currentElement);
-                if (parent == null)
+                var walker = TreeWalker.ControlViewWalker;
+                var parent = walker.GetParent(element);
+                if (parent == null || parent == AutomationElement.RootElement) // RootElement represents the desktop
                 {
-                    // Current element is the root
-                    return currentElement;
+                    break; // We've found the topmost window
                 }
-                currentElement = parent;
-            } while (true);
+                element = parent;
+            }
+
+            return element;
         }
     }
 }
