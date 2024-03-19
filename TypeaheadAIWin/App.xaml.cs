@@ -80,7 +80,7 @@ namespace TypeaheadAIWin
 
             // Bind singletons
             services.AddSingleton<AXInspector>();
-            services.AddSingleton<AXUIElementMapper>();
+            services.AddSingleton<AXUIElementSerializer>();
             services.AddSingleton<AXInvoker>();
 
             services.AddSingleton<ChatService>();

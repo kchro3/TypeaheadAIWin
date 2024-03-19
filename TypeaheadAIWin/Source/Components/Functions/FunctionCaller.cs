@@ -44,7 +44,7 @@ namespace TypeaheadAIWin.Source.Components.Functions
             return functionCall;
         }
 
-        public ApplicationContext Call(FunctionCall functionCall)
+        public void Call(FunctionCall functionCall)
         {
             switch (functionCall.Name)
             {
@@ -55,8 +55,6 @@ namespace TypeaheadAIWin.Source.Components.Functions
                 default:
                     throw new NotImplementedException($"Function {functionCall.Name} is not implemented");
             }
-
-            return _axInspector.GetCurrentAppContext();
         }
     }
 }

@@ -109,20 +109,13 @@ namespace TypeaheadAIWin.Source.ViewModel
         }
  
         // Send a message
-        public void Reply()
+        public void Reply(ApplicationContext appContext)
         {
             Cancel();
             cancellationToken = new CancellationTokenSource();
 
-
             /// TODO: Add handling for this error.
             var uuid = _supabaseClient.Auth.CurrentUser?.Id ?? throw new InvalidOperationException("User is not authenticated");
-            var requestData = new ChatRequest
-            {
-                Uuid = uuid,
-                Messages = ChatMessages.ToList(),
-                AppContext = _axInspector.GetCurrentAppContext(),
-            };
 
             // Play the snap sound on a loop
             _soundPlayer.PlayLooping();
@@ -131,6 +124,22 @@ namespace TypeaheadAIWin.Source.ViewModel
             {
                 try
                 {
+                    var hydratedAppContext = new ApplicationContext
+                    {
+                        AppName = appContext.AppName,
+                        ProcessName = appContext.ProcessName,
+                        Pid = appContext.Pid,
+                        CurrentWindow = appContext.CurrentWindow,
+                        SerializedAppState = await _axInspector.SerializeElementAsync(appContext.CurrentWindow)
+                    };
+
+                    var requestData = new ChatRequest
+                    {
+                        Uuid = uuid,
+                        Messages = ChatMessages.ToList(),
+                        AppContext = hydratedAppContext,
+                    };
+
                     await _chatService.StreamChatAsync(requestData, cancellationToken.Token);
                 }
                 catch (Exception ex)
@@ -238,7 +247,7 @@ namespace TypeaheadAIWin.Source.ViewModel
             }
         }
 
-        // Add the token to the chat response 
+        // Add the token to the chat response
         private void AddToken(ChatResponse response)
         {
             if (response.FinishReason != null)
