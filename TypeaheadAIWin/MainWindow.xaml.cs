@@ -3,6 +3,10 @@ using MahApps.Metro.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Automation;
+using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Components;
+using TypeaheadAIWin.Source.Components.Accessibility;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.ViewModel;
 using Application = System.Windows.Application;
@@ -35,6 +39,7 @@ namespace TypeaheadAIWin
             _lowLevelKeyboardHook.Handling = true; 
             _lowLevelKeyboardHook.IsCapsLock = true;
             _lowLevelKeyboardHook.Down += LowLevelKeyboardHook_Down;
+            _lowLevelKeyboardHook.Up += LowLevelKeyboardHook_Up;
             _lowLevelKeyboardHook.Start();
         }
 
@@ -68,7 +73,9 @@ namespace TypeaheadAIWin
                 (e.Keys.Are(Key.Shift, Key.CapsLock, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
             {
                 e.IsHandled = true;
-                Application.Current.Dispatcher.Invoke(() => Toggle());
+                Application.Current.Dispatcher.Invoke(() => {
+                    Toggle();
+                });
             }
             // New Window hotkey
             else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
@@ -106,7 +113,7 @@ namespace TypeaheadAIWin
                 });
             }
             // Cancel speaking
-            else if (e.Keys.Are(Key.Shift, Key.Escape))
+            else if (e.Keys.Are(Key.LeftWindows, Key.Escape))
             {
                 Application.Current.Dispatcher.Invoke(() =>
                 {
@@ -114,6 +121,52 @@ namespace TypeaheadAIWin
                     chatPageViewModel.Cancel();
                 });
             }
+        }
+
+        private void LowLevelKeyboardHook_Up(object? sender, KeyboardEventArgs e)
+        {
+            // Activate Window hotkey
+            if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                (e.Keys.Are(Key.Shift, Key.Insert, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                (e.Keys.Are(Key.Shift, Key.CapsLock, Key.Space) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
+            {
+                e.IsHandled = true;
+            }
+            // New Window hotkey
+            else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                     (e.Keys.Are(Key.Shift, Key.Insert, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                     (e.Keys.Are(Key.Shift, Key.CapsLock, Key.N) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
+            {
+                e.IsHandled = true;
+            }
+            // Screenshot Window hotkey
+            else if ((e.Keys.Are(Key.Shift, Key.LeftWindows, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftLeftWindow) ||
+                     (e.Keys.Are(Key.Shift, Key.Insert, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftInsert) ||
+                     (e.Keys.Are(Key.Shift, Key.CapsLock, Key.I) && _userDefaults.TypeaheadKey == TypeaheadKey.ShiftCapsLock))
+            {
+                e.IsHandled = true;
+            }
+        }
+
+        /// <summary>
+        /// Keep in the back pocket for now.
+        /// </summary>
+        /// <param name="element"></param>
+        /// <returns></returns>
+        private static AutomationElement GetRootWindow(AutomationElement element)
+        {
+            while (true)
+            {
+                var walker = TreeWalker.ControlViewWalker;
+                var parent = walker.GetParent(element);
+                if (parent == null || parent == AutomationElement.RootElement) // RootElement represents the desktop
+                {
+                    break; // We've found the topmost window
+                }
+                element = parent;
+            }
+
+            return element;
         }
     }
 }

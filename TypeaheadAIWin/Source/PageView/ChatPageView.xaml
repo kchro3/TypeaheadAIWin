@@ -46,6 +46,9 @@
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
                     <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsHidden}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
                         <DataTrigger Binding="{Binding Role}" Value="Assistant">
                             <Setter Property="Background" Value="LightBlue" />
                         </DataTrigger>

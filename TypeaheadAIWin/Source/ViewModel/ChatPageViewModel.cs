@@ -8,7 +8,9 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using TypeaheadAIWin.Source.Accessibility;
+using TypeaheadAIWin.Source.Components.Functions;
 using TypeaheadAIWin.Source.Model;
+using TypeaheadAIWin.Source.Model.Chat;
 using TypeaheadAIWin.Source.Service;
 using TypeaheadAIWin.Source.Speech;
 
@@ -18,6 +20,7 @@ namespace TypeaheadAIWin.Source.ViewModel
     {
         private readonly AXInspector _axInspector;
         private readonly ChatService _chatService;
+        private readonly FunctionCaller _functionCaller;
         private readonly SoundPlayer _soundPlayer;
         private readonly StreamingSpeechProcessor _speechProcessor;
         private readonly Supabase.Client _supabaseClient;
@@ -32,12 +35,14 @@ namespace TypeaheadAIWin.Source.ViewModel
         public ChatPageViewModel(
             AXInspector axInspector,
             ChatService chatService,
+            FunctionCaller functionCaller,
             SoundPlayer soundPlayer,
             StreamingSpeechProcessor speechProcessor,
             Supabase.Client supabaseClient)
         {
             _axInspector = axInspector;
             _chatService = chatService;
+            _functionCaller = functionCaller;
             _soundPlayer = soundPlayer;
             _speechProcessor = speechProcessor;
             _supabaseClient = supabaseClient;
@@ -92,7 +97,9 @@ namespace TypeaheadAIWin.Source.ViewModel
             // Check if there's content to send
             if (!string.IsNullOrEmpty(chatMessage.Text) || chatMessage.Image != null)
             {
-                SendMessage(chatMessage, _axInspector.GetCurrentAppContext());
+                ChatMessages.Add(chatMessage);
+
+                Reply();
 
                 // Clear the MessageInput RichTextBox
                 messageInput.Document.Blocks.Clear();
@@ -101,12 +108,11 @@ namespace TypeaheadAIWin.Source.ViewModel
         }
  
         // Send a message
-        public void SendMessage(ChatMessage message, ApplicationContext appContext)
+        public void Reply()
         {
             Cancel();
             cancellationToken = new CancellationTokenSource();
 
-            ChatMessages.Add(message);
 
             /// TODO: Add handling for this error.
             var uuid = _supabaseClient.Auth.CurrentUser?.Id ?? throw new InvalidOperationException("User is not authenticated");
@@ -114,7 +120,7 @@ namespace TypeaheadAIWin.Source.ViewModel
             {
                 Uuid = uuid,
                 Messages = ChatMessages.ToList(),
-                AppContext = appContext,
+                AppContext = _axInspector.GetCurrentAppContext(),
             };
 
             // Play the snap sound on a loop
@@ -173,11 +179,63 @@ namespace TypeaheadAIWin.Source.ViewModel
             _soundPlayer.Stop();
             Application.Current.Dispatcher.Invoke(() =>
             {
-                AddToken(e);
+                switch (e.Mode)
+                {
+                    case ResponseMode.Text:
+                        AddToken(e);
+                        break;
+                    case ResponseMode.Function:
+                        AddFunction(e);
+                        break;
+                    default:
+                        Trace.WriteLine("Unhandled response mode");
+                        break;
+                }
             });
         }
 
-        // Add the token to the chat response
+        private void AddFunction(ChatResponse response)
+        {
+            if (response.Text != null)
+            {
+                var functionCall = _functionCaller.Parse(response.Text);
+                var functionArgs = functionCall.ParseArgs();
+                if (functionArgs?.HumanReadable != null)
+                {
+                    _speechProcessor.ProcessToken(functionArgs.HumanReadable);
+                    _speechProcessor.FlushBuffer();
+                }
+
+                ChatMessages.Add(new ChatMessage
+                {
+                    Role = ChatMessageRole.Assistant,
+                    IsHidden = true,
+                    Text = response.Text,
+                    RootId = ChatMessages.Count > 0 ? ChatMessages[0].RootId : Guid.NewGuid(),
+                    InReplyToId = ChatMessages.Count > 0 ? ChatMessages[^1].Id : null,
+                    FunctionCalls = [functionCall]
+                });
+
+                _functionCaller.Call(functionCall);
+
+                _speechProcessor.ProcessToken("Completed Task");
+                _speechProcessor.FlushBuffer();
+
+                ChatMessages.Add(new ChatMessage
+                {
+                    Role = ChatMessageRole.Tool,
+                    IsHidden = true,
+                    Text = "Completed Task",
+                    RootId = ChatMessages.Count > 0 ? ChatMessages[0].RootId : Guid.NewGuid(),
+                    InReplyToId = ChatMessages.Count > 0 ? ChatMessages[^1].Id : null,
+                    InReplyToFunctionCallId = functionCall.Id
+                });
+
+                Reply();
+            }
+        }
+
+        // Add the token to the chat response 
         private void AddToken(ChatResponse response)
         {
             if (response.FinishReason != null)

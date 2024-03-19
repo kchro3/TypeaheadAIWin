@@ -8,6 +8,8 @@ using System.Windows;
 using TypeaheadAIWin.Source;
 using TypeaheadAIWin.Source.Accessibility;
 using TypeaheadAIWin.Source.Components;
+using TypeaheadAIWin.Source.Components.Accessibility;
+using TypeaheadAIWin.Source.Components.Functions;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.PageView;
 using TypeaheadAIWin.Source.Service;
@@ -78,7 +80,14 @@ namespace TypeaheadAIWin
 
             // Bind singletons
             services.AddSingleton<AXInspector>();
+            services.AddSingleton<AXUIElementMapper>();
+            services.AddSingleton<AXInvoker>();
+
             services.AddSingleton<ChatService>();
+
+            services.AddSingleton<FunctionCaller>();
+            services.AddSingleton<OpenUrlFunctionExecutor>();
+
             services.AddSingleton(httpClient);
             services.AddSingleton<HttpAuthServer>();
             services.AddSingleton<MenuBarViewModel>();
