@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Media;
@@ -230,6 +231,8 @@ namespace TypeaheadAIWin.Source.ViewModel
                     InReplyToId = ChatMessages.Count > 0 ? ChatMessages[^1].Id : null,
                     InReplyToFunctionCallId = functionCall.Id
                 });
+
+                App.ServiceProvider.GetRequiredService<MainWindowViewModel>().Activated = true;
 
                 Reply();
             }

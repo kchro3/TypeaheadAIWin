@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xaml.Behaviors;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,12 +31,23 @@ namespace TypeaheadAIWin.Source.Components
         {
             var behavior = (ActivateBehavior)dependencyObject;
             if (!behavior.Activated || behavior.isActivated)
+            {
                 return;
+            }
+
+            if (!behavior.AssociatedObject.IsVisible)
+                behavior.AssociatedObject.Show();
+
             // The Activated property is set to true but the Activated event (tracked by the
             // isActivated field) hasn't been fired. Go ahead and activate the window.
             if (behavior.AssociatedObject.WindowState == WindowState.Minimized)
                 behavior.AssociatedObject.WindowState = WindowState.Normal;
+
             behavior.AssociatedObject.Activate();
+
+            behavior.AssociatedObject.Topmost = true;  // important
+            behavior.AssociatedObject.Topmost = false; // important
+            behavior.AssociatedObject.Focus();         // important
         }
 
         protected override void OnAttached()
