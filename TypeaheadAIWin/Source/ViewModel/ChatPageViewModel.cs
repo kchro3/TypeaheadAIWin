@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Media;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -27,6 +28,7 @@ namespace TypeaheadAIWin.Source.ViewModel
         private readonly Supabase.Client _supabaseClient;
 
         private CancellationTokenSource? cancellationToken;
+        private AutomationElement? currentWindow;
 
         public ObservableCollection<ChatMessage> ChatMessages { get; } = new();
 

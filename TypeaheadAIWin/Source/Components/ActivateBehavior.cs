@@ -30,6 +30,12 @@ namespace TypeaheadAIWin.Source.Components
         static void OnActivatedChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
         {
             var behavior = (ActivateBehavior)dependencyObject;
+            if (!behavior.Activated && behavior.AssociatedObject.IsVisible)
+            {
+                behavior.AssociatedObject.Hide();
+                return;
+            }
+
             if (!behavior.Activated || behavior.isActivated)
             {
                 return;
