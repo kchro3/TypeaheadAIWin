@@ -99,7 +99,8 @@ namespace TypeaheadAIWin.Source.Accessibility
             {
                 AppName = process.MainWindowTitle,
                 ProcessName = process.ProcessName,
-                Pid = pid
+                Pid = pid,
+                Window = AutomationElement.FromHandle(hWnd)
             };
 
             return context;
