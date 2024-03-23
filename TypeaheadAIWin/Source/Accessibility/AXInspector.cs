@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Media;
 using TypeaheadAIWin.Source.Components;
+using TypeaheadAIWin.Source.Components.Accessibility;
 using TypeaheadAIWin.Source.Model;
 
 namespace TypeaheadAIWin.Source.Accessibility
@@ -27,14 +28,17 @@ namespace TypeaheadAIWin.Source.Accessibility
             public int Y;
         }
 
+        private readonly AXUIElementSerializer _axUIElementSerializer;
         private readonly Screenshotter _screenshotter;
         private readonly UserDefaults _userDefaults;
         private AutomationElement focusedElement;
 
         public AXInspector(
+            AXUIElementSerializer axUIElementSerializer,
             Screenshotter screenshotter,
             UserDefaults userDefaults) 
         {
+            _axUIElementSerializer = axUIElementSerializer;
             _screenshotter = screenshotter;
             _userDefaults = userDefaults;
 
@@ -88,22 +92,47 @@ namespace TypeaheadAIWin.Source.Accessibility
             return focusedElement;
         }
 
-        public ApplicationContext GetCurrentAppContext()
+        public async Task<ApplicationContext> GetCurrentAppContext()
         {
             IntPtr hWnd = GetForegroundWindow();
             GetWindowThreadProcessId(hWnd, out uint pid);
 
             using Process process = Process.GetProcessById((int)pid);
 
+            Trace.WriteLine("serializing...");
             ApplicationContext context = new ApplicationContext()
             {
                 AppName = process.MainWindowTitle,
                 ProcessName = process.ProcessName,
                 Pid = pid,
-                Window = AutomationElement.FromHandle(hWnd)
+                SerializedUIElement = await _axUIElementSerializer.SerializeAsync(AutomationElement.FromHandle(hWnd))
             };
+            Trace.WriteLine("done serializing!");
 
             return context;
+        }
+
+        private AutomationElement GetFocusedWindow()
+        {
+            var tmpElement = GetFocusedElement();
+            while (true)
+            {
+                Trace.WriteLine("Getting parent");
+                var walker = TreeWalker.ControlViewWalker;
+                var parent = walker.GetParent(tmpElement);
+                if (parent == null || parent == AutomationElement.RootElement) // RootElement represents the desktop
+                {
+                    break; // We've found the topmost window
+                }
+                tmpElement = parent;
+            }
+
+            return tmpElement;
+        }
+
+        public async Task<string> SerializeElementAsync(AutomationElement element)
+        {
+            return await _axUIElementSerializer.SerializeAsync(element);
         }
 
         private void Subscribe()

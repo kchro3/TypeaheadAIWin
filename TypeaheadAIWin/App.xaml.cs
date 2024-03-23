@@ -76,11 +76,11 @@ namespace TypeaheadAIWin
 
             // Initalize the HTTP Client
             var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(10);
+            httpClient.Timeout = TimeSpan.FromSeconds(60);
 
             // Bind singletons
             services.AddSingleton<AXInspector>();
-            services.AddSingleton<AXUIElementMapper>();
+            services.AddSingleton<AXUIElementSerializer>();
             services.AddSingleton<AXInvoker>();
 
             services.AddSingleton<ChatService>();
@@ -112,7 +112,7 @@ namespace TypeaheadAIWin
             this.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
-            mainWindow.OpenWindow();
+            _serviceProvider.GetRequiredService<MainWindowViewModel>().Activated = true;
         }
 
         private async Task<Supabase.Client> CreateSupabaseClientAsync()
@@ -135,7 +135,7 @@ namespace TypeaheadAIWin
 
         private void NotifyIcon_Click(object sender, EventArgs e)
         {
-            _serviceProvider.GetRequiredService<MainWindow>().OpenWindow();
+            _serviceProvider.GetRequiredService<MainWindowViewModel>().Activated = true;
         }
 
         protected override void OnExit(ExitEventArgs e)

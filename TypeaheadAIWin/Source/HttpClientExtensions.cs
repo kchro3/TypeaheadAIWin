@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Net.Http.Headers;
+using System.Diagnostics;
 
 namespace TypeaheadAIWin.Source
 {
@@ -25,7 +26,6 @@ namespace TypeaheadAIWin.Source
             }
 
             var content = JsonContent.Create(requestModel, null, options);
-
             using var request = CreatePostEventStreamRequest(uri, authorizationToken, content);
 
             try

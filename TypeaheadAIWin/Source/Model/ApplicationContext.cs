@@ -7,6 +7,6 @@ namespace TypeaheadAIWin.Source.Model
         public required string AppName { get; set; }
         public required string ProcessName { get; set; }
         public required uint Pid { get; set; }
-        public required AutomationElement Window { get; set; }
+        public string SerializedUIElement { get; set; }
     }
 }

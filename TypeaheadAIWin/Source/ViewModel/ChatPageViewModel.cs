@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Media;
@@ -28,12 +29,14 @@ namespace TypeaheadAIWin.Source.ViewModel
         private readonly Supabase.Client _supabaseClient;
 
         private CancellationTokenSource? cancellationToken;
-        private AutomationElement? currentWindow;
+        private Task<ApplicationContext>? _updateCurrentWindowTask;
 
         public ObservableCollection<ChatMessage> ChatMessages { get; } = new();
 
         // Fires an event with the screenshot
         public event EventHandler<ImageSource> OnScreenshotTaken;
+        // Fires an event to toggle window
+        public event EventHandler<bool> OnActivateWindow;
 
         public ChatPageViewModel(
             AXInspector axInspector,
@@ -116,15 +119,8 @@ namespace TypeaheadAIWin.Source.ViewModel
             Cancel();
             cancellationToken = new CancellationTokenSource();
 
-
             /// TODO: Add handling for this error.
             var uuid = _supabaseClient.Auth.CurrentUser?.Id ?? throw new InvalidOperationException("User is not authenticated");
-            var requestData = new ChatRequest
-            {
-                Uuid = uuid,
-                Messages = ChatMessages.ToList(),
-                AppContext = _axInspector.GetCurrentAppContext(),
-            };
 
             // Play the snap sound on a loop
             _soundPlayer.PlayLooping();
@@ -133,6 +129,23 @@ namespace TypeaheadAIWin.Source.ViewModel
             {
                 try
                 {
+                    // Ensure the async operation started by UpdateCurrentWindow is completed before proceeding.
+                    ApplicationContext? appContext = null;
+                    if (_updateCurrentWindowTask != null)
+                    {
+                        appContext = await _updateCurrentWindowTask;
+                        _updateCurrentWindowTask = null; // Reset for next time
+                    }
+
+                    Trace.WriteLine(appContext?.SerializedUIElement);
+
+                    var requestData = new ChatRequest
+                    {
+                        Uuid = uuid,
+                        Messages = ChatMessages.ToList(),
+                        AppContext = appContext,
+                    };
+
                     await _chatService.StreamChatAsync(requestData, cancellationToken.Token);
                 }
                 catch (Exception ex)
@@ -166,6 +179,12 @@ namespace TypeaheadAIWin.Source.ViewModel
             _soundPlayer.Stop();
         }
 
+        public void UpdateCurrentWindow()
+        {
+            Trace.WriteLine("kick off update");
+            _updateCurrentWindowTask = _axInspector.GetCurrentAppContext();
+        }
+
         public void TakeScreenshot()
         {
             var screenshot = _axInspector.TakeScreenshot();
@@ -191,7 +210,7 @@ namespace TypeaheadAIWin.Source.ViewModel
                         AddFunction(e);
                         break;
                     default:
-                        Trace.WriteLine("Unhandled response mode");
+                        AddToken(e);
                         break;
                 }
             });
@@ -201,6 +220,9 @@ namespace TypeaheadAIWin.Source.ViewModel
         {
             if (response.Text != null)
             {
+                OnActivateWindow?.Invoke(this, false);
+                UpdateCurrentWindow();
+
                 var functionCall = _functionCaller.Parse(response.Text);
                 var functionArgs = functionCall.ParseArgs();
                 if (functionArgs?.HumanReadable != null)
@@ -234,13 +256,13 @@ namespace TypeaheadAIWin.Source.ViewModel
                     InReplyToFunctionCallId = functionCall.Id
                 });
 
-                App.ServiceProvider.GetRequiredService<MainWindowViewModel>().Activated = true;
+                OnActivateWindow?.Invoke(this, true);
 
                 Reply();
             }
         }
 
-        // Add the token to the chat response 
+        // Add the token to the chat response
         private void AddToken(ChatResponse response)
         {
             if (response.FinishReason != null)
