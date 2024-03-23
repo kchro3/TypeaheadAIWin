@@ -9,7 +9,7 @@ namespace TypeaheadAIWin.Source.Model.Chat
     public class ChatResponse
     {
         public string Text { get; set; }
-        public ResponseMode Mode { get; set; }
+        public ResponseMode? Mode { get; set; }
         public string FinishReason { get; set; }
     }
 }

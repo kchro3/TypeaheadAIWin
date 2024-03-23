@@ -45,8 +45,11 @@ namespace TypeaheadAIWin.Source.ViewModel
             _lowLevelKeyboardHook.Up += LowLevelKeyboardHook_Up;
             _lowLevelKeyboardHook.Start();
 
+            _chatPageViewModel.OnActivateWindow += (sender, e) => Activated = e;
+
             if (_supabaseClient.Auth.CurrentSession != null)
             {
+                _chatPageViewModel.UpdateCurrentWindow();
                 NavigateToChatPage();
             }
             else
@@ -86,6 +89,8 @@ namespace TypeaheadAIWin.Source.ViewModel
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     _chatPageViewModel.Clear();
+                    _chatPageViewModel.UpdateCurrentWindow();
+
                     Activated = true;
                 });
             }
@@ -98,6 +103,7 @@ namespace TypeaheadAIWin.Source.ViewModel
                 Application.Current.Dispatcher.Invoke(() =>
                 {
                     _chatPageViewModel.Clear();
+                    _chatPageViewModel.UpdateCurrentWindow();
                     _chatPageViewModel.TakeScreenshot();
                     Activated = true;
                 });

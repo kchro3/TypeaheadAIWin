@@ -92,20 +92,22 @@ namespace TypeaheadAIWin.Source.Accessibility
             return focusedElement;
         }
 
-        public ApplicationContext GetCurrentAppContext()
+        public async Task<ApplicationContext> GetCurrentAppContext()
         {
             IntPtr hWnd = GetForegroundWindow();
             GetWindowThreadProcessId(hWnd, out uint pid);
 
             using Process process = Process.GetProcessById((int)pid);
 
+            Trace.WriteLine("serializing...");
             ApplicationContext context = new ApplicationContext()
             {
                 AppName = process.MainWindowTitle,
                 ProcessName = process.ProcessName,
                 Pid = pid,
-                CurrentWindow = GetFocusedWindow()
+                SerializedUIElement = await _axUIElementSerializer.SerializeAsync(AutomationElement.FromHandle(hWnd))
             };
+            Trace.WriteLine("done serializing!");
 
             return context;
         }

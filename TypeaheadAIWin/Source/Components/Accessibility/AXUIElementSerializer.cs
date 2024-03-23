@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,13 +13,23 @@ namespace TypeaheadAIWin.Source.Components.Accessibility
     public class AXUIElementSerializer
     {
         private int nextId = 0;
-        private const int MaxDepth = 5; // Define the maximum depth
 
         // Change the signature to return Task<string> for async support
         public Task<string> SerializeAsync(AutomationElement root)
         {
             // Run the serialization process on a background thread
-            return Task.Run(() => Serialize(root));
+            return Task.Run(() =>
+            {
+                var stopwatch = Stopwatch.StartNew(); // Start the stopwatch at the beginning of the task
+
+                var result = Serialize(root);
+
+                stopwatch.Stop(); // Stop the stopwatch when serialization is done
+                Trace.WriteLine($"Serialization took {stopwatch.ElapsedMilliseconds} milliseconds.");
+                Trace.WriteLine(result);
+
+                return result;
+            });
         }
 
         public string Serialize(AutomationElement root)
@@ -35,7 +46,7 @@ namespace TypeaheadAIWin.Source.Components.Accessibility
                 var parentInfo = current.Item2;
                 var currentDepth = current.Item3;
 
-                if (element == null || currentDepth == MaxDepth) continue;
+                if (element == null) continue;
 
                 bool isOffscreen = (bool)element.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty);
                 if (!isOffscreen)
@@ -52,7 +63,13 @@ namespace TypeaheadAIWin.Source.Components.Accessibility
                 }
             }
 
-            return JsonConvert.SerializeObject(rootInfo, Formatting.None);
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.None,
+                NullValueHandling = NullValueHandling.Ignore // Ignore null fields during serialization
+            };
+
+            return JsonConvert.SerializeObject(rootInfo, settings);
         }
 
         private AXUIElement GetElementDetails(AutomationElement element)

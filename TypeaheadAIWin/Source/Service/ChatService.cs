@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,13 +22,14 @@ namespace TypeaheadAIWin.Source.Service
 
             _serializerOptions = new JsonSerializerOptions
             {
-                Converters = { 
+                Converters = {
+                    new AppContextJsonConverter(),
                     new ChatMessageJsonConverter(),
                     new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, true)
                 },
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
                 PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
         }
 
