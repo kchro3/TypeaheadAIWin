@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Threading.Tasks;
 using TypeaheadAIWin.Source.Model.Functions;
 using TypeaheadAIWin.Source.Model;
 using TypeaheadAIWin.Source.Accessibility;
@@ -13,16 +8,17 @@ namespace TypeaheadAIWin.Source.Components.Functions
 {
     public class FunctionCaller
     {
-        private readonly AXInspector _axInspector;
         private readonly OpenUrlFunctionExecutor _openUrlFunctionExecutor;
+        private readonly PerformUIActionFunctionExecutor _performUIElementFunctionExecutor;
         private readonly JsonSerializerOptions _options;
 
         public FunctionCaller(
             AXInspector axInspector,
-            OpenUrlFunctionExecutor openUrlFunctionExecutor)
+            OpenUrlFunctionExecutor openUrlFunctionExecutor,
+            PerformUIActionFunctionExecutor performUIActionFunctionExecutor)
         {
-            _axInspector = axInspector;
             _openUrlFunctionExecutor = openUrlFunctionExecutor;
+            _performUIElementFunctionExecutor = performUIActionFunctionExecutor;
 
             _options = new JsonSerializerOptions
             {
@@ -44,13 +40,17 @@ namespace TypeaheadAIWin.Source.Components.Functions
             return functionCall;
         }
 
-        public void Call(FunctionCall functionCall)
+        public void Call(FunctionCall functionCall, ApplicationContext appContext)
         {
             switch (functionCall.Name)
             {
                 case FunctionName.open_url:
                     var openUrlFunctionArgs = functionCall.ParseArgs() as OpenUrlFunctionArgs;
-                    _openUrlFunctionExecutor.ExecuteFunction(openUrlFunctionArgs);
+                    _openUrlFunctionExecutor.ExecuteFunction(openUrlFunctionArgs, appContext);
+                    break;
+                case FunctionName.perform_ui_action:
+                    var performUIActionFunctionArgs = functionCall.ParseArgs() as PerformUIActionFunctionArgs;
+                    _performUIElementFunctionExecutor.ExecuteFunction(performUIActionFunctionArgs, appContext);
                     break;
                 default:
                     throw new NotImplementedException($"Function {functionCall.Name} is not implemented");

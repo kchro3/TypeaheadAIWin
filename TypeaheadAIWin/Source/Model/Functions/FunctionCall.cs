@@ -9,7 +9,9 @@ namespace TypeaheadAIWin.Source.Model.Functions
 {
     public enum FunctionName
     {
-        open_url // Add other function names as needed
+        open_url,
+        perform_ui_action
+        // Add other function names as needed
     }
 
     public class FunctionCall
@@ -28,6 +30,15 @@ namespace TypeaheadAIWin.Source.Model.Functions
             return null;
         }
 
+        private bool GetBooleanArg(string argName)
+        {
+            if (Args.TryGetValue(argName, out var value) && value.ValueKind == JsonValueKind.True)
+            {
+                return value.GetBoolean();
+            }
+            return false;
+        }
+
         public IFunctionArgs ParseArgs()
         {
             switch (Name)
@@ -38,6 +49,20 @@ namespace TypeaheadAIWin.Source.Model.Functions
                     {
                         Url = url,
                         HumanReadable = $"Opening {url} and waiting for 5 seconds for the page to load..."
+                    };
+                case FunctionName.perform_ui_action:
+                    var elementId = GetStringArg("id");
+                    var narration = GetStringArg("narration");
+                    var inputText = GetStringArg("inputText");
+                    var pressEnter = GetBooleanArg("pressEnter");
+
+                    return new PerformUIActionFunctionArgs
+                    {
+                        Id = elementId,
+                        Narration = narration,
+                        InputText = inputText,
+                        PressEnter = pressEnter,
+                        HumanReadable = narration
                     };
                 default:
                     throw new NotImplementedException($"Function {Name} is not implemented");

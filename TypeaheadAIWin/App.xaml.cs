@@ -87,6 +87,7 @@ namespace TypeaheadAIWin
 
             services.AddSingleton<FunctionCaller>();
             services.AddSingleton<OpenUrlFunctionExecutor>();
+            services.AddSingleton<PerformUIActionFunctionExecutor>();
 
             services.AddSingleton(httpClient);
             services.AddSingleton<HttpAuthServer>();

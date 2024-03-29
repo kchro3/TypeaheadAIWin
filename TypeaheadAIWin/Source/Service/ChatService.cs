@@ -14,7 +14,7 @@ namespace TypeaheadAIWin.Source.Service
         private readonly Supabase.Client _supabaseClient;
         private readonly JsonSerializerOptions _serializerOptions;
 
-        public event EventHandler<ChatResponse> OnChatResponseReceived;
+        public event EventHandler<Tuple<ChatRequest, ChatResponse>> OnChatResponseReceived;
 
         public ChatService(HttpClient httpClient, Supabase.Client supabaseClient) {
             _httpClient = httpClient;
@@ -55,7 +55,7 @@ namespace TypeaheadAIWin.Source.Service
                     var chatResponse = JsonSerializer.Deserialize<ChatResponse>(line, _serializerOptions);
                     if (chatResponse != null)
                     {
-                        OnChatResponseReceived?.Invoke(this, chatResponse);
+                        OnChatResponseReceived?.Invoke(this, new Tuple<ChatRequest, ChatResponse>(chatRequest, chatResponse));
                     }
                 }
             }

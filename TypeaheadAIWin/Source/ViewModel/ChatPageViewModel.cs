@@ -181,7 +181,6 @@ namespace TypeaheadAIWin.Source.ViewModel
 
         public void UpdateCurrentWindow()
         {
-            Trace.WriteLine("kick off update");
             _updateCurrentWindowTask = _axInspector.GetCurrentAppContext();
         }
 
@@ -196,27 +195,27 @@ namespace TypeaheadAIWin.Source.ViewModel
         }
 
         // Handle the chat response
-        private async void ChatService_OnChatResponseReceived(object sender, ChatResponse e)
+        private async void ChatService_OnChatResponseReceived(object sender, Tuple<ChatRequest, ChatResponse> e)
         {
             _soundPlayer.Stop();
             Application.Current.Dispatcher.Invoke(() =>
             {
-                switch (e.Mode)
+                switch (e.Item2.Mode)
                 {
                     case ResponseMode.Text:
-                        AddToken(e);
+                        AddToken(e.Item2);
                         break;
                     case ResponseMode.Function:
-                        AddFunction(e);
+                        AddFunction(e.Item1, e.Item2);
                         break;
                     default:
-                        AddToken(e);
+                        AddToken(e.Item2);
                         break;
                 }
             });
         }
 
-        private void AddFunction(ChatResponse response)
+        private void AddFunction(ChatRequest request, ChatResponse response)
         {
             if (response.Text != null)
             {
@@ -241,7 +240,7 @@ namespace TypeaheadAIWin.Source.ViewModel
                     FunctionCalls = [functionCall]
                 });
 
-                _functionCaller.Call(functionCall);
+                _functionCaller.Call(functionCall, request.AppContext);
 
                 _speechProcessor.ProcessToken("Completed Task");
                 _speechProcessor.FlushBuffer();
