@@ -4,25 +4,35 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Automation;
+using UIAutomationClient;
 
 namespace TypeaheadAIWin.Source.Components.Accessibility
 {
     public class AXInvoker
     {
-        public void InvokeElement(AutomationElement element)
-        {
-            // Check if the element supports the InvokePattern.
-            if (element.TryGetCurrentPattern(InvokePattern.Pattern, out object pattern))
-            {
-                var invokePattern = (InvokePattern)pattern;
+        // Define the Invoke pattern ID
+        private static readonly int UIA_InvokePatternId = 10000; // UIA_InvokePatternId
 
-                // Perform the click action.
+        public void InvokeElement(IUIAutomationElement element)
+        {
+            if (element == null)
+            {
+                throw new ArgumentNullException(nameof(element), "The UI Automation element cannot be null.");
+            }
+
+            // Check if the element supports the Invoke pattern
+            var invokePatternObj = element.GetCurrentPattern(UIA_InvokePatternId);
+            if (invokePatternObj != null)
+            {
+                // Cast the returned object to IUIAutomationInvokePattern
+                var invokePattern = (IUIAutomationInvokePattern)invokePatternObj;
+
+                // Invoke the pattern's action
                 invokePattern.Invoke();
             }
             else
             {
-                // The element does not support the InvokePattern - handle accordingly.
-                Console.WriteLine("Element does not support InvokePattern.");
+                throw new InvalidOperationException("The specified element does not support the Invoke pattern.");
             }
         }
     }

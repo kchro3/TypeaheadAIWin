@@ -6,6 +6,7 @@ using System.Windows.Media;
 using TypeaheadAIWin.Source.Components;
 using TypeaheadAIWin.Source.Components.Accessibility;
 using TypeaheadAIWin.Source.Model;
+using TypeaheadAIWin.Source.Model.Accessibility;
 
 namespace TypeaheadAIWin.Source.Accessibility
 {
@@ -100,39 +101,17 @@ namespace TypeaheadAIWin.Source.Accessibility
             using Process process = Process.GetProcessById((int)pid);
 
             Trace.WriteLine("serializing...");
-            ApplicationContext context = new ApplicationContext()
+            var axUIState = await _axUIElementSerializer.SerializeAsync(hWnd);
+            var context = new ApplicationContext()
             {
                 AppName = process.MainWindowTitle,
                 ProcessName = process.ProcessName,
                 Pid = pid,
-                SerializedUIElement = await _axUIElementSerializer.SerializeAsync(AutomationElement.FromHandle(hWnd))
+                SerializedUIElement = axUIState.SerializedUIElement,
+                ElementReferences = axUIState.ElementReferences
             };
-            Trace.WriteLine("done serializing!");
 
             return context;
-        }
-
-        private AutomationElement GetFocusedWindow()
-        {
-            var tmpElement = GetFocusedElement();
-            while (true)
-            {
-                Trace.WriteLine("Getting parent");
-                var walker = TreeWalker.ControlViewWalker;
-                var parent = walker.GetParent(tmpElement);
-                if (parent == null || parent == AutomationElement.RootElement) // RootElement represents the desktop
-                {
-                    break; // We've found the topmost window
-                }
-                tmpElement = parent;
-            }
-
-            return tmpElement;
-        }
-
-        public async Task<string> SerializeElementAsync(AutomationElement element)
-        {
-            return await _axUIElementSerializer.SerializeAsync(element);
         }
 
         private void Subscribe()

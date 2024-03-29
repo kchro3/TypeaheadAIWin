@@ -1,4 +1,5 @@
 ﻿using System.Windows.Automation;
+using UIAutomationClient;
 
 namespace TypeaheadAIWin.Source.Model
 {
@@ -8,5 +9,6 @@ namespace TypeaheadAIWin.Source.Model
         public required string ProcessName { get; set; }
         public required uint Pid { get; set; }
         public string SerializedUIElement { get; set; }
+        public Dictionary<string, IUIAutomationElement> ElementReferences { get; set; }
     }
 }
